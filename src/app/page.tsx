@@ -1,103 +1,92 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ListingCard } from "@/components/ListingCard";
+import { CATEGORIES, SCHOOL_NAME } from "@/lib/config";
+import { searchListings } from "@/lib/listings";
+import { listWants } from "@/lib/social";
+import { getCurrentUser } from "@/lib/auth";
+import { saveSearch } from "@/actions/social";
+import { money } from "@/lib/format";
 
-export default function Home() {
+type SP = { q?: string; category?: string; free?: string; fall?: string; sort?: string; max?: string };
+
+function qs(sp: SP, patch: Partial<SP>) {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries({ ...sp, ...patch })) if (v) p.set(k, v);
+  const s = p.toString();
+  return s ? `/?${s}` : "/";
+}
+
+export default async function Home({ searchParams }: { searchParams: Promise<SP> }) {
+  const sp = await searchParams;
+  const user = await getCurrentUser();
+  const listings = searchListings({
+    q: sp.q, category: sp.category, free: sp.free === "1", fall: sp.fall === "1",
+    sort: (sp.sort as "new" | "cheap" | "pricey") ?? "new",
+    maxPrice: sp.max ? Math.round(parseFloat(sp.max) * 100) : undefined,
+  });
+  const filtering = !!(sp.q || sp.category || sp.free || sp.fall || sp.max);
+  const wants = filtering ? [] : listWants().slice(0, 4);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="space-y-5">
+      {!user && (
+        <section className="rounded-2xl bg-accent px-5 py-6 text-accent-fg sm:px-8">
+          <h1 className="text-2xl font-black sm:text-3xl">Don&apos;t bin it. Swap it.</h1>
+          <p className="mt-1 max-w-xl opacity-90">Buy, sell and give away stuff with other {SCHOOL_NAME} students. Meet on campus, pay however you like, no shipping ever.</p>
+          <div className="mt-4 flex gap-2"><Link href="/signup" className="btn bg-white text-accent">Join with school email</Link><Link href="/wanted" className="btn border border-white/40">See what people want</Link></div>
+        </section>
+      )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <form action="/" className="sm:hidden"><input name="q" defaultValue={sp.q} placeholder="Search anything…" className="input" /></form>
+
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        <Link href={qs(sp, { category: "", free: "", fall: "" })} className={!sp.category && !sp.free && !sp.fall ? "chip-on" : "chip"}>All</Link>
+        <Link href={qs(sp, { free: sp.free ? "" : "1" })} className={sp.free ? "chip-on" : "chip"}>🎁 Free</Link>
+        <Link href={qs(sp, { fall: sp.fall ? "" : "1" })} className={sp.fall ? "chip-on" : "chip"}>🍂 Fall handoff</Link>
+        {CATEGORIES.map((c) => (
+          <Link key={c.slug} href={qs(sp, { category: sp.category === c.slug ? "" : c.slug })} className={sp.category === c.slug ? "chip-on" : "chip"}>{c.label}</Link>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted">{listings.length} {listings.length === 1 ? "item" : "items"}{sp.q ? ` for “${sp.q}”` : ""}</span>
+        <span className="ml-auto flex gap-1">
+          {(["new", "cheap", "pricey"] as const).map((s) => (
+            <Link key={s} href={qs(sp, { sort: s })} className={(sp.sort ?? "new") === s ? "chip-on" : "chip"}>{s === "new" ? "Newest" : s === "cheap" ? "Price ↑" : "Price ↓"}</Link>
+          ))}
+        </span>
+        {user && filtering && (
+          <form action={saveSearch} className="contents">
+            <input type="hidden" name="q" value={sp.q ?? ""} /><input type="hidden" name="category" value={sp.category ?? ""} />
+            {sp.free && <input type="hidden" name="free" value="1" />}{sp.max && <input type="hidden" name="max" value={sp.max} />}
+            <button className="chip hover:border-accent">🔔 Alert me when something like this is listed</button>
+          </form>
+        )}
+      </div>
+
+      {wants.length > 0 && (
+        <section className="rounded-xl border border-dashed border-line p-3">
+          <div className="mb-2 flex items-baseline justify-between"><h2 className="font-bold">People are looking for</h2><Link href="/wanted" className="text-sm text-accent">All wanted posts →</Link></div>
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {wants.map((w) => (
+              <li key={w.id}><Link href={`/wanted/${w.id}`} className="block rounded-lg bg-card p-3 hover:shadow-sm">
+                <div className="truncate font-medium">🙋 {w.title}</div>
+                <div className="text-xs text-muted">{w.user_name} · {w.max_price_cents !== null ? `up to ${money(w.max_price_cents)}` : "any price"}</div>
+              </Link></li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {listings.length === 0 ? (
+        <div className="rounded-xl border border-line bg-card p-10 text-center text-muted">
+          <p className="text-lg">Nothing here yet.</p>
+          <p className="mt-1 text-sm">{filtering ? "Try fewer filters, or save this search and we'll tell you when something shows up." : "Be the first to list something."}</p>
+          <div className="mt-4 flex justify-center gap-2"><Link href="/listings/new" className="btn-primary">List an item</Link><Link href="/wanted/new" className="btn-ghost">Post a wanted ad</Link></div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{listings.map((l) => <ListingCard key={l.id} l={l} />)}</div>
+      )}
     </div>
   );
 }
