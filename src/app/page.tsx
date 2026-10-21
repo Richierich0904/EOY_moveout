@@ -6,6 +6,7 @@ import { listWants } from "@/lib/social";
 import { getCurrentUser } from "@/lib/auth";
 import { saveSearch } from "@/actions/social";
 import { money } from "@/lib/format";
+import { currentDraw, prizesFor } from "@/lib/game";
 
 type SP = { q?: string; category?: string; free?: string; fall?: string; sort?: string; max?: string };
 
@@ -26,6 +27,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
   });
   const filtering = !!(sp.q || sp.category || sp.free || sp.fall || sp.max);
   const wants = filtering ? [] : listWants().slice(0, 4);
+  const draw = filtering ? null : currentDraw();
+  const topPrize = draw ? prizesFor(draw.id)[0] : null;
 
   return (
     <div className="space-y-5">
@@ -37,6 +40,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         </section>
       )}
 
+      {draw && (
+        <Link href="/lottery" className="flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm hover:bg-accent/15">
+          <span className="text-2xl">🎟️</span>
+          <span><b>{draw.title}</b> is on. Give away 3 things, get a ticket.{topPrize ? ` First prize: ${topPrize.title}.` : ""}</span>
+        </Link>
+      )}
       <form action="/" className="sm:hidden"><input name="q" defaultValue={sp.q} placeholder="Search anything…" className="input" /></form>
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">

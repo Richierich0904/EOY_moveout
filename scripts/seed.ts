@@ -104,6 +104,24 @@ insW.run(uid[3], "MATH 301 textbook", "Stewart calculus, any recent edition.", "
 insW.run(uid[1], "Bike, any condition", "Just needs to roll. Will fix it up.", "sports", null);
 insW.run(uid[2], "Standing desk lamp", "", "dorm", 1500);
 
+// Confirmed giveaways (so the draw has entrants) and a running draw.
+const soldRows = db.prepare("SELECT id, user_id FROM listings WHERE status = 'sold' ORDER BY id").all() as { id: number; user_id: number }[];
+soldRows.forEach((l, i) => {
+  const receiver = uid[(uid.indexOf(l.user_id) + 1) % uid.length];
+  // Most receivers have confirmed; every 4th handoff is still waiting, to show the "nudge" state.
+  db.prepare("UPDATE listings SET buyer_id = ?, received_at = CASE WHEN ? % 4 != 3 THEN closed_at ELSE NULL END WHERE id = ?").run(receiver, i, l.id);
+});
+db.prepare("UPDATE listings SET price_cents = 0 WHERE status = 'sold' AND user_id = ?").run(uid[1]); // Leo gave everything away
+db.prepare("UPDATE listings SET price_cents = 0 WHERE id = (SELECT MIN(id) FROM listings WHERE status = 'sold' AND user_id = ?)").run(uid[3]);
+const draw = db.prepare("INSERT INTO draws (title, description, starts_at, ends_at) VALUES (?, ?, datetime('now','-90 days'), datetime('now','+14 days'))")
+  .run("Autumn giveaway draw", "Every 3 items you give away earns a ticket. Drawn at the last house meeting of term.");
+const insP = db.prepare("INSERT INTO prizes (draw_id, title, credit_cents, position) VALUES (?, ?, ?, ?)");
+insP.run(draw.lastInsertRowid, "$25 school store voucher", 0, 0);
+insP.run(draw.lastInsertRowid, "20 credits to spend on the app", 2000, 1);
+insP.run(draw.lastInsertRowid, "Skip-the-queue pass for move-out storage", 0, 2);
+db.prepare("INSERT INTO credit_transactions (user_id, delta, reason) VALUES (?, ?, ?)").run(uid[4], 1500, "Welcome bonus from the organisers");
+db.prepare("UPDATE listings SET accepts_credits = 1 WHERE status = 'available' AND price_cents BETWEEN 500 AND 1500").run();
+
 db.prepare("INSERT INTO saved_searches (user_id, query, category, free_only, max_price_cents) VALUES (?, ?, ?, ?, ?)").run(uid[4], "fridge", null, 0, null);
 db.prepare("INSERT INTO saved_searches (user_id, query, category, free_only, max_price_cents) VALUES (?, ?, ?, ?, ?)").run(uid[3], "", "textbooks", 0, 2500);
 
@@ -112,4 +130,5 @@ const newest = db.prepare("SELECT id FROM listings WHERE status = 'available' OR
 fanOutNewListing(newest.id);
 
 console.log(`Seeded ${users.length} users, ${listings.length} listings, 4 wanted posts.`);
+console.log("Set ADMIN_EMAILS=maya@demo.school to try the organisers page.");
 console.log("Log in as any of: " + users.map((u) => u[0]).join(", ") + "  (password: password123)");

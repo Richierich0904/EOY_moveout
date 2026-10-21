@@ -16,6 +16,9 @@ export type Listing = {
   buyer_id: number | null;
   created_at: string;
   closed_at: string | null;
+  accepts_credits: number;
+  credit_paid_cents: number;
+  received_at: string | null;
   // joined
   seller_name: string;
   seller_house: string;

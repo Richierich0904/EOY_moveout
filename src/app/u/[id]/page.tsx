@@ -3,6 +3,8 @@ import { getDb } from "@/lib/db";
 import { searchListings } from "@/lib/listings";
 import { ListingCard } from "@/components/ListingCard";
 import { Who } from "@/components/Avatar";
+import { Badges } from "@/components/Badges";
+import { badgesFor } from "@/lib/game";
 
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,6 +19,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
         <Who id={u.id} name={u.name} house={u.house} gradYear={u.grad_year} />
         <span className="text-sm text-muted"><b>{rehomed}</b> items rehomed · member since {new Date(u.created_at.replace(" ", "T") + "Z").toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
       </div>
+      <Badges list={badgesFor(u.id)} />
       <h2 className="text-xl font-bold">Available from {u.name.split(" ")[0]}</h2>
       {listings.length === 0 ? <p className="text-sm text-muted">Nothing right now.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{listings.map((l) => <ListingCard key={l.id} l={l} />)}</div>}
     </div>

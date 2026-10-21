@@ -12,6 +12,7 @@ type Suggestions = Record<string, { median: number; n: number } | null>;
 function HandoffFields() {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
+      <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="accepts_credits" /> Accept ⭐ credits as payment <span className="text-xs text-muted">(1 credit = $1 of price; people win them in the giveaway draw)</span></label>
       <div>
         <label className="label">Handoff</label>
         <select name="handoff" className="input">{HANDOFF.map((h) => <option key={h.slug} value={h.slug}>{h.label}</option>)}</select>

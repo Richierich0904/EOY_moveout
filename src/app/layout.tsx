@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { APP_NAME, SCHOOL_NAME } from "@/lib/config";
 import { getCurrentUser } from "@/lib/auth";
 import { unreadCounts } from "@/lib/social";
+import { creditBalance } from "@/lib/game";
 
 export const metadata: Metadata = {
   title: `${APP_NAME} · ${SCHOOL_NAME}`,
@@ -18,7 +19,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <Nav user={user ? { name: user.name, verified: !!user.verified } : null} counts={counts} />
+        <Nav user={user ? { name: user.name, verified: !!user.verified, credits: creditBalance(user.id), isAdmin: user.is_admin } : null} counts={counts} />
         <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:pb-10">{children}</main>
         <footer className="mx-auto max-w-6xl px-4 py-8 text-center text-xs text-muted">
           {APP_NAME} is a student-run marketplace for {SCHOOL_NAME}. Meet in public places. Pay however you both agree. No shipping, no fees.

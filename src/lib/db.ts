@@ -96,7 +96,40 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read, created_at DESC);
+CREATE TABLE IF NOT EXISTS draws (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  starts_at TEXT NOT NULL DEFAULT (datetime('now')),
+  ends_at TEXT NOT NULL,
+  drawn_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS prizes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_id INTEGER NOT NULL REFERENCES draws(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  credit_cents INTEGER NOT NULL DEFAULT 0,
+  winner_id INTEGER REFERENCES users(id),
+  position INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS credit_transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  delta INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  listing_id INTEGER REFERENCES listings(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_credit_user ON credit_transactions(user_id);
 `;
+
+// Columns added after the first release. Each ALTER is skipped if the column already exists.
+const MIGRATIONS: [table: string, column: string, ddl: string][] = [
+  ["listings", "accepts_credits", "INTEGER NOT NULL DEFAULT 0"],
+  ["listings", "credit_paid_cents", "INTEGER NOT NULL DEFAULT 0"],
+  ["listings", "received_at", "TEXT"],
+];
 
 declare global {
   var __db: Database.Database | undefined;
@@ -109,6 +142,10 @@ export function getDb(): Database.Database {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.exec(SCHEMA);
+  for (const [table, column, ddl] of MIGRATIONS) {
+    const cols = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
+    if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
+  }
   global.__db = db;
   return db;
 }

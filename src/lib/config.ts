@@ -53,3 +53,25 @@ export const HANDOFF_SPOTS = (
   .filter(Boolean);
 
 export const SESSION_DAYS = 30;
+
+// ---------- fun stuff ----------
+
+// Emails that get the /admin page (create draws, grant credits). Comma-separated.
+export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
+  .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+
+// How many confirmed giveaways earn one lottery ticket.
+export const GIVEAWAYS_PER_TICKET = Math.max(1, parseInt(process.env.GIVEAWAYS_PER_TICKET ?? "3", 10) || 3);
+
+// Credits are an in-app currency. 100 = one credit, shown as "⭐ 1". Sellers can opt in to accept them.
+export const CREDIT_NAME = process.env.CREDIT_NAME ?? "credits";
+
+export const BADGES = [
+  { slug: "giver", emoji: "🎁", label: "Giver", desc: "Gave away your first item" },
+  { slug: "generous", emoji: "💛", label: "Generous", desc: "Gave away 5 items" },
+  { slug: "rehomer", emoji: "🌱", label: "Rehomer", desc: "Rehomed 10 items in total" },
+  { slug: "bookworm", emoji: "📚", label: "Textbook hero", desc: "Passed on 3 textbooks" },
+  { slug: "summer", emoji: "🍂", label: "Summer saver", desc: "Handed something over across the summer" },
+  { slug: "lucky", emoji: "🎟️", label: "Lucky", desc: "Won a draw" },
+  { slug: "early", emoji: "🚀", label: "Early adopter", desc: "One of the first 50 members" },
+] as const;

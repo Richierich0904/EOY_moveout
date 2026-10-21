@@ -8,11 +8,12 @@ import { CATEGORIES, CONDITIONS, HANDOFF } from "@/lib/config";
 import { dollarsToCents } from "@/lib/format";
 import { saveImages } from "@/lib/upload";
 import { fanOutNewListing, notify } from "@/lib/social";
+import { addCredits } from "@/lib/game";
 import type { FormState } from "./auth";
 
 function str(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
 
-type Draft = { title: string; description: string; category: string; price_cents: number; condition: string; course_code: string | null; handoff: string; spot: string | null; images: File[] };
+type Draft = { title: string; description: string; category: string; price_cents: number; condition: string; course_code: string | null; handoff: string; spot: string | null; images: File[]; accepts_credits: number };
 
 function validate(d: Draft): string | null {
   if (d.title.length < 2) return "Give it a title.";
@@ -28,9 +29,9 @@ async function insertListing(userId: number, d: Draft) {
   const db = getDb();
   const files = await saveImages(d.images);
   const r = db.prepare(
-    `INSERT INTO listings (user_id, title, description, category, price_cents, condition, course_code, handoff, spot)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(userId, d.title, d.description, d.category, d.price_cents, d.condition, d.course_code, d.handoff, d.spot);
+    `INSERT INTO listings (user_id, title, description, category, price_cents, condition, course_code, handoff, spot, accepts_credits)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(userId, d.title, d.description, d.category, d.price_cents, d.condition, d.course_code, d.handoff, d.spot, d.accepts_credits);
   const id = Number(r.lastInsertRowid);
   const ins = db.prepare("INSERT INTO listing_images (listing_id, file, position) VALUES (?, ?, ?)");
   files.forEach((f, i) => ins.run(id, f, i));
@@ -51,6 +52,7 @@ export async function createListing(_prev: FormState, fd: FormData): Promise<For
     handoff: str(fd, "handoff") || "now",
     spot: str(fd, "spot") || null,
     images: fd.getAll("images").filter((f): f is File => f instanceof File),
+    accepts_credits: fd.get("accepts_credits") === "on" ? 1 : 0,
   };
   const err = validate(d);
   if (err) return { error: err };
@@ -80,6 +82,7 @@ export async function createListingsBulk(_prev: FormState, fd: FormData): Promis
       course_code: null,
       handoff, spot,
       images: img instanceof File && img.size > 0 ? [img] : [],
+      accepts_credits: fd.get("accepts_credits") === "on" ? 1 : 0,
     });
   }
   if (drafts.length === 0) return { error: "Add at least one item." };
@@ -96,21 +99,41 @@ export async function setListingStatus(fd: FormData) {
   const buyerId = fd.get("buyer_id") ? Number(fd.get("buyer_id")) : null;
   if (!["available", "pending", "sold"].includes(status)) throw new Error("Bad status");
   const db = getDb();
-  const l = db.prepare("SELECT user_id, title FROM listings WHERE id = ?").get(id) as { user_id: number; title: string } | undefined;
+  const l = db.prepare("SELECT user_id, title, price_cents, buyer_id, credit_paid_cents FROM listings WHERE id = ?").get(id) as
+    { user_id: number; title: string; price_cents: number; buyer_id: number | null; credit_paid_cents: number } | undefined;
   if (!l || l.user_id !== user.id) throw new Error("Not your listing");
-  db.prepare("UPDATE listings SET status = ?, buyer_id = ?, closed_at = CASE WHEN ? = 'sold' THEN datetime('now') ELSE NULL END WHERE id = ?")
-    .run(status, status === "available" ? null : buyerId, status, id);
+  const keepsCreditBuyer = l.credit_paid_cents > 0 && status !== "available" && buyerId === l.buyer_id;
+  db.transaction(() => {
+    if (l.credit_paid_cents > 0 && !keepsCreditBuyer) refundCredits(id, l.user_id, l.buyer_id!, l.credit_paid_cents, l.title);
+    db.prepare("UPDATE listings SET status = ?, buyer_id = ?, received_at = CASE WHEN ? = 'sold' THEN received_at ELSE NULL END, closed_at = CASE WHEN ? = 'sold' THEN datetime('now') ELSE NULL END WHERE id = ?")
+      .run(status, status === "available" ? null : buyerId, status, status, id);
+  })();
   if (buyerId && status !== "available") {
-    notify(buyerId, status === "sold" ? "Marked as yours" : "Item reserved for you",
-      `${user.name} marked "${l.title}" as ${status === "sold" ? "handed over to you" : "reserved for you"}.`, `/listings/${id}`);
+    const free = l.price_cents === 0;
+    notify(buyerId, status === "sold" ? (free ? "Did you get it? Tap to confirm 🎁" : "Marked as yours") : "Item reserved for you",
+      status === "sold"
+        ? `${user.name} marked "${l.title}" as handed over to you.${free ? " Confirming it gives them a lottery ticket." : ""}`
+        : `${user.name} reserved "${l.title}" for you.`, `/listings/${id}`);
   }
   revalidatePath("/"); revalidatePath(`/listings/${id}`); revalidatePath("/me");
+}
+
+function refundCredits(listingId: number, sellerId: number, buyerId: number, cents: number, title: string) {
+  addCredits(buyerId, cents, `Refund: "${title}" was re-listed or removed`, listingId);
+  addCredits(sellerId, -cents, `Refund to buyer: "${title}"`, listingId);
+  getDb().prepare("UPDATE listings SET credit_paid_cents = 0 WHERE id = ?").run(listingId);
+  notify(buyerId, "Credits refunded", `"${title}" is no longer reserved for you. Your ${cents / 100} credits are back.`, "/me");
 }
 
 export async function deleteListing(fd: FormData) {
   const user = await requireUser();
   const id = Number(fd.get("id"));
-  getDb().prepare("DELETE FROM listings WHERE id = ? AND user_id = ?").run(id, user.id);
+  const db = getDb();
+  const l = db.prepare("SELECT title, buyer_id, credit_paid_cents FROM listings WHERE id = ? AND user_id = ?").get(id, user.id) as
+    { title: string; buyer_id: number | null; credit_paid_cents: number } | undefined;
+  if (!l) redirect("/me");
+  if (l.credit_paid_cents > 0 && l.buyer_id) refundCredits(id, user.id, l.buyer_id, l.credit_paid_cents, l.title);
+  db.prepare("DELETE FROM listings WHERE id = ? AND user_id = ?").run(id, user.id);
   revalidatePath("/");
   redirect("/me");
 }

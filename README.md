@@ -17,6 +17,17 @@ Built to beat a generic Depop clone on the things only a campus marketplace can 
 | **Impact page** | Items and kilograms kept out of landfill. This is your pitch to the school for official endorsement. |
 | **No payments, no shipping** | Meet at the dining hall, pay with cash or whatever app you both use. Keeps you out of the legal mess of holding minors' money. |
 
+### The fun layer
+
+| Feature | How it works |
+|---|---|
+| **Giveaway draw** (`/lottery`) | Every 3 confirmed giveaways earns a ticket in the current draw. Organisers set the prizes and the deadline; winners are picked automatically when it passes, weighted by tickets. |
+| **Receipt confirmation** | A giveaway only counts once the receiver taps "Yes, I received it". That stops people listing junk and marking it gone to farm tickets. |
+| **Credits** | Play money inside the app. Won in draws or granted by organisers, spent on any listing whose seller ticks "accept credits". Reserving with credits moves them to the seller instantly; re-listing or deleting refunds them. |
+| **House cup** | Items rehomed per house on the impact page. Boarding schools run on house rivalry. |
+| **Badges** | Giver, Generous, Textbook hero, Summer saver, Lucky, and so on, shown on profiles. |
+| **Organisers page** (`/admin`) | Create draws, draw winners early, grant or deduct credits. Only emails listed in `ADMIN_EMAILS` get in. |
+
 ## Run it
 
 ```bash
@@ -25,7 +36,7 @@ npm run seed      # optional demo data; demo accounts use password "password123"
 npm run dev       # http://localhost:3000
 ```
 
-Copy `.env.example` to `.env.local` to set the school name, houses, allowed email domains and meetup spots.
+Copy `.env.example` to `.env.local` to set the school name, houses, allowed email domains, meetup spots, and which emails are organisers (`ADMIN_EMAILS`). To try the organisers page with the demo data, run with `ADMIN_EMAILS=maya@demo.school`.
 
 While `SMTP_URL` is not set, the email verification code is printed to the server console **and shown on the verify page**, so you can try the whole flow locally. Before launch, set `SMTP_URL` and implement `sendVerifyEmail` in `src/actions/auth.ts` (nodemailer is the usual choice).
 
@@ -49,6 +60,7 @@ src/lib/db.ts         SQLite connection + schema (auto-created on first run)
 src/lib/auth.ts       sessions, password hashing, email-domain check
 src/lib/listings.ts   search/filter queries, price suggestion, impact stats
 src/lib/social.ts     wanted posts, messaging, notifications, alert fan-out
+src/lib/game.ts       credits ledger, lottery tickets and draws, badges, house cup
 src/lib/upload.ts     photo storage
 src/actions/*.ts      server actions (all writes go through here)
 src/app/**            pages

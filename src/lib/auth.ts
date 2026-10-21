@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { getDb } from "./db";
-import { ALLOWED_EMAIL_DOMAINS, SESSION_DAYS } from "./config";
+import { ADMIN_EMAILS, ALLOWED_EMAIL_DOMAINS, SESSION_DAYS } from "./config";
 
 export type User = {
   id: number;
@@ -12,6 +12,7 @@ export type User = {
   grad_year: number;
   verified: number;
   created_at: string;
+  is_admin: boolean;
 };
 
 const COOKIE = "swap_session";
@@ -67,8 +68,8 @@ export async function getCurrentUser(): Promise<User | null> {
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = ? AND s.expires_at > datetime('now')`,
     )
-    .get(token) as User | undefined;
-  return row ?? null;
+    .get(token) as Omit<User, "is_admin"> | undefined;
+  return row ? { ...row, is_admin: ADMIN_EMAILS.includes(row.email.toLowerCase()) } : null;
 }
 
 /** Returns the signed-in, verified user or throws. Use inside server actions. */
@@ -76,5 +77,11 @@ export async function requireUser(): Promise<User> {
   const u = await getCurrentUser();
   if (!u) throw new Error("You need to be signed in.");
   if (!u.verified) throw new Error("Please verify your email first.");
+  return u;
+}
+
+export async function requireAdmin(): Promise<User> {
+  const u = await requireUser();
+  if (!u.is_admin) throw new Error("Admins only.");
   return u;
 }

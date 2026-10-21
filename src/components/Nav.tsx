@@ -2,7 +2,7 @@ import Link from "next/link";
 import { APP_NAME } from "@/lib/config";
 import { logout } from "@/actions/auth";
 
-type Props = { user: { name: string; verified: boolean } | null; counts: { notifications: number; messages: number } };
+type Props = { user: { name: string; verified: boolean; credits: number; isAdmin: boolean } | null; counts: { notifications: number; messages: number } };
 
 function Badge({ n }: { n: number }) {
   if (!n) return null;
@@ -20,12 +20,14 @@ export function Nav({ user, counts }: Props) {
           </form>
           <nav className="ml-auto hidden items-center gap-1 sm:flex">
             <Link href="/wanted" className="btn-ghost">Wanted</Link>
+            <Link href="/lottery" className="btn-ghost">🎟️ Draw</Link>
             <Link href="/impact" className="btn-ghost">Impact</Link>
             {user ? (
               <>
                 <Link href="/messages" className="btn-ghost relative">Messages<Badge n={counts.messages} /></Link>
                 <Link href="/alerts" className="btn-ghost relative">Alerts<Badge n={counts.notifications} /></Link>
-                <Link href="/me" className="btn-ghost">{user.name.split(" ")[0]}</Link>
+                <Link href="/me" className="btn-ghost">{user.name.split(" ")[0]}{user.credits > 0 && <span className="text-xs text-muted">⭐ {user.credits / 100}</span>}</Link>
+                {user.isAdmin && <Link href="/admin" className="btn-ghost">Admin</Link>}
                 <Link href="/listings/new" className="btn-primary">+ Sell</Link>
                 <form action={logout}><button className="btn-ghost text-muted">Log out</button></form>
               </>
@@ -41,7 +43,7 @@ export function Nav({ user, counts }: Props) {
       {/* Mobile bottom bar */}
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-card text-xs sm:hidden">
         <Link href="/" className="flex flex-col items-center py-2">🏠<span>Browse</span></Link>
-        <Link href="/wanted" className="flex flex-col items-center py-2">🙋<span>Wanted</span></Link>
+        <Link href="/lottery" className="flex flex-col items-center py-2">🎟️<span>Draw</span></Link>
         <Link href="/listings/new" className="flex flex-col items-center py-2 font-bold text-accent">➕<span>Sell</span></Link>
         <Link href="/messages" className="relative flex flex-col items-center py-2">💬<span>Chat</span><span className="absolute right-4 top-1"><Badge n={counts.messages} /></span></Link>
         <Link href={user ? "/me" : "/login"} className="relative flex flex-col items-center py-2">👤<span>{user ? "Me" : "Log in"}</span><span className="absolute right-4 top-1"><Badge n={counts.notifications} /></span></Link>
