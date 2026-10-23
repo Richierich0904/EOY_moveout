@@ -20,31 +20,31 @@ export default async function WantPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div className="rounded-2xl border border-line bg-card p-5">
+      <div className="rounded-lg border border-line bg-card p-5">
         <div className="text-xs font-bold uppercase tracking-wide text-muted">Wanted · {categoryLabel(w.category)}{w.status === "fulfilled" ? " · Found it ✅" : ""}</div>
         <h1 className="mt-1 text-2xl font-bold">{w.title}</h1>
         <p className="mt-1 text-lg font-bold">{w.max_price_cents !== null ? `Will pay up to ${money(w.max_price_cents)}` : "Open to any price"}</p>
         {w.description && <p className="mt-3 whitespace-pre-wrap">{w.description}</p>}
         <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
           <Who id={w.user_id} name={w.user_name} house={w.user_house} gradYear={w.user_grad_year} />
-          <span className="text-xs text-muted">{timeAgo(w.created_at)}</span>
+          <span className="text-[12px] text-muted">{timeAgo(w.created_at)}</span>
         </div>
       </div>
 
       {mine ? (
-        <div className="flex gap-2 rounded-2xl border border-accent/40 bg-card p-4">
+        <div className="flex gap-2 rounded-lg border border-accent/40 bg-card p-4">
           <form action={setWantStatus}><input type="hidden" name="id" value={w.id} /><input type="hidden" name="status" value={w.status === "open" ? "fulfilled" : "open"} />
             <button className="btn-primary">{w.status === "open" ? "Mark as found" : "Reopen"}</button></form>
           <form action={deleteWant}><input type="hidden" name="id" value={w.id} /><button className="btn-ghost text-free">Delete</button></form>
           <Link href="/listings/new" className="btn-ghost ml-auto">List something</Link>
         </div>
       ) : user ? (
-        <div className="rounded-2xl border border-line bg-card p-4">
+        <div className="rounded-lg border border-line bg-card p-4">
           <h2 className="mb-2 font-bold">Got one? Tell {w.user_name.split(" ")[0]}</h2>
           <MessageForm wantId={w.id} placeholder="Hey, I have one of these. It's…" />
         </div>
       ) : (
-        <div className="rounded-2xl border border-line bg-card p-4 text-sm"><Link href="/login" className="font-medium text-accent underline">Log in</Link> to reply.</div>
+        <div className="rounded-lg border border-line bg-card p-4 text-sm"><Link href="/login" className="a-link font-medium">Log in</Link> to reply.</div>
       )}
 
       {maybe.length > 0 && (

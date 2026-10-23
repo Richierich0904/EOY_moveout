@@ -1,14 +1,29 @@
 @import "tailwindcss";
 
+/* Palette modelled on big-retail e-commerce: dark navy chrome, grey canvas, white cards,
+   yellow/orange calls to action, teal links, red prices. */
 :root {
-  --bg: #fafaf7;
-  --fg: #141414;
-  --muted: #6b6b66;
-  --line: #e6e4dd;
+  --bg: #eaeded;
+  --fg: #0f1111;
+  --muted: #565959;
+  --line: #d5d9d9;
   --card: #ffffff;
-  --accent: #1f6f4a;
+  --header: #131921;
+  --subheader: #232f3e;
+  --accent: #f08804;
   --accent-fg: #ffffff;
-  --free: #d64545;
+  --cta: #ffd814;
+  --cta-border: #fcd200;
+  --cta-hover: #f7ca00;
+  --cta2: #ffa41c;
+  --cta2-border: #ff8f00;
+  --cta2-hover: #fa8900;
+  --link: #007185;
+  --link-hover: #c7511f;
+  --price: #b12704;
+  --ok: #007600;
+  --free: #b12704;
+  --focus: #e77600;
 }
 
 @theme inline {
@@ -17,18 +32,46 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-card: var(--card);
+  --color-header: var(--header);
+  --color-subheader: var(--subheader);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
+  --color-cta: var(--cta);
+  --color-cta2: var(--cta2);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-price: var(--price);
+  --color-ok: var(--ok);
   --color-free: var(--free);
 }
 
 html { color-scheme: light; }
-body { background: var(--bg); color: var(--fg); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: "Amazon Ember", Arial, Helvetica, sans-serif;
+  font-size: 14px; line-height: 1.35;
+}
 
-@utility input { @apply w-full rounded-lg border border-line bg-card px-3 py-2 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/20; }
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium transition active:scale-[.98] disabled:opacity-50; }
-@utility btn-primary { @apply btn bg-accent text-accent-fg hover:brightness-110; }
-@utility btn-ghost { @apply btn border border-line bg-card hover:bg-bg; }
-@utility chip { @apply inline-flex items-center rounded-full border border-line bg-card px-3 py-1 text-sm whitespace-nowrap; }
-@utility chip-on { @apply chip border-accent bg-accent text-accent-fg; }
-@utility label { @apply mb-1 block text-sm font-medium text-muted; }
+@utility input {
+  @apply w-full rounded-[3px] border border-[#888c8c] bg-card px-2.5 py-1.5 text-[14px] leading-5 outline-none;
+  box-shadow: 0 1px 2px rgba(15,17,17,.15) inset;
+}
+.input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px #c8f3fa, 0 1px 2px rgba(15,17,17,.15) inset; }
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-full border px-4 py-1.5 text-[13px] leading-5 transition disabled:opacity-50;
+  box-shadow: 0 2px 5px rgba(213,217,217,.5);
+}
+@utility btn-primary { @apply btn border-[#fcd200] bg-[#ffd814] text-fg hover:bg-[#f7ca00]; }
+@utility btn-orange  { @apply btn border-[#ff8f00] bg-[#ffa41c] text-fg hover:bg-[#fa8900]; }
+@utility btn-ghost   { @apply btn border-line bg-card text-fg hover:bg-[#f7fafa]; }
+@utility chip    { @apply inline-flex items-center rounded-full border border-line bg-card px-3 py-1 text-[13px] whitespace-nowrap hover:bg-[#f7fafa]; }
+@utility chip-on { @apply chip border-subheader bg-subheader text-white hover:bg-subheader; }
+@utility label   { @apply mb-1 block text-[13px] font-bold text-fg; }
+@utility a-link  { @apply text-link hover:text-link-hover hover:underline; }
+@utility card    { @apply rounded-lg border border-line bg-card; }
+@utility h-section { @apply text-[21px] font-bold leading-tight; }
+
+/* Headings everywhere: slightly tighter than default */
+h1 { font-size: 24px; line-height: 1.25; font-weight: 700; }
+h2 { font-size: 18px; line-height: 1.3; font-weight: 700; }

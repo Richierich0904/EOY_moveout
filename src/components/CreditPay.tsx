@@ -8,12 +8,12 @@ export function CreditPay({ listingId, priceCents, balance }: { listingId: numbe
   const [state, action] = useActionState(payWithCredits, undefined);
   const enough = balance >= priceCents;
   return (
-    <form action={action} className="space-y-2 rounded-xl border border-dashed border-accent/50 p-3">
+    <form action={action} className="space-y-2">
       <input type="hidden" name="id" value={listingId} />
-      <p className="text-sm">⭐ Seller accepts <b>{priceCents / 100} credits</b>. You have {balance / 100}.</p>
+      <p className="text-[13px]">⭐ Takes <b>{priceCents / 100} credits</b>. You have {balance / 100}.</p>
       <FormError error={state?.error} />
-      {enough ? <SubmitButton className="btn-ghost w-full border-accent text-accent">Reserve with credits</SubmitButton>
-        : <p className="text-xs text-muted">Win credits in the <a href="/lottery" className="underline">giveaway draw</a>.</p>}
+      {enough ? <SubmitButton className="btn-orange w-full">Reserve with credits</SubmitButton>
+        : <p className="text-[12px] text-muted">Win credits in the <a href="/lottery" className="underline">giveaway draw</a>.</p>}
     </form>
   );
 }

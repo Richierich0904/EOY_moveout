@@ -12,11 +12,11 @@ type Suggestions = Record<string, { median: number; n: number } | null>;
 function HandoffFields() {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="accepts_credits" /> Accept ⭐ credits as payment <span className="text-xs text-muted">(1 credit = $1 of price; people win them in the giveaway draw)</span></label>
+      <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="accepts_credits" /> Accept ⭐ credits as payment <span className="text-[12px] text-muted">(1 credit = $1 of price; people win them in the giveaway draw)</span></label>
       <div>
         <label className="label">Handoff</label>
         <select name="handoff" className="input">{HANDOFF.map((h) => <option key={h.slug} value={h.slug}>{h.label}</option>)}</select>
-        <p className="mt-1 text-xs text-muted">“Fall” means it goes into summer storage and the buyer collects it at move-in. Great for leavers.</p>
+        <p className="mt-1 text-[12px] text-muted">“Fall” means it goes into summer storage and the buyer collects it at move-in. Great for leavers.</p>
       </div>
       <div>
         <label className="label">Where to meet</label>
@@ -53,10 +53,10 @@ function SingleForm({ suggestions }: { suggestions: Suggestions }) {
             <input name="price" type="number" min="0" step="0.5" inputMode="decimal" placeholder="0" disabled={free} className="input" />
             <label className="flex shrink-0 items-center gap-2 text-sm"><input type="checkbox" name="free" checked={free} onChange={(e) => setFree(e.target.checked)} /> Free 🎁</label>
           </div>
-          {tip && !free && <p className="mt-1 text-xs text-muted">Similar {CATEGORIES.find((c) => c.slug === category)?.label.toLowerCase()} items here sold for about {money(tip.median)} ({tip.n} sales).</p>}
+          {tip && !free && <p className="mt-1 text-[12px] text-muted">Similar {CATEGORIES.find((c) => c.slug === category)?.label.toLowerCase()} items here sold for about {money(tip.median)} ({tip.n} sales).</p>}
         </div>
         {category === "textbooks" && (
-          <div><label className="label">Course code</label><input name="course_code" placeholder="e.g. MATH 301" className="input uppercase" /><p className="mt-1 text-xs text-muted">Students taking that course can find it instantly.</p></div>
+          <div><label className="label">Course code</label><input name="course_code" placeholder="e.g. MATH 301" className="input uppercase" /><p className="mt-1 text-[12px] text-muted">Students taking that course can find it instantly.</p></div>
         )}
       </div>
       <HandoffFields />
@@ -71,7 +71,7 @@ function BulkForm() {
   const rows = Array.from({ length: 10 }, (_, i) => i);
   return (
     <form action={action} className="space-y-4" encType="multipart/form-data">
-      <p className="rounded-lg bg-accent/10 p-3 text-sm">Move-out mode: one line per item, photo optional. Leave the price empty to give it away. Empty rows are skipped. You can add details later.</p>
+      <p className="rounded-lg bg-[#fffbf3] p-3 text-sm">Move-out mode: one line per item, photo optional. Leave the price empty to give it away. Empty rows are skipped. You can add details later.</p>
       <div className="space-y-2">
         {rows.map((i) => (
           <div key={i} className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-line bg-card p-2 sm:grid-cols-[2fr_1.2fr_80px_1.2fr]">

@@ -19,10 +19,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <Nav user={user ? { name: user.name, verified: !!user.verified, credits: creditBalance(user.id), isAdmin: user.is_admin } : null} counts={counts} />
-        <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-4 sm:pb-10">{children}</main>
-        <footer className="mx-auto max-w-6xl px-4 py-8 text-center text-xs text-muted">
-          {APP_NAME} is a student-run marketplace for {SCHOOL_NAME}. Meet in public places. Pay however you both agree. No shipping, no fees.
+        <Nav user={user ? { name: user.name, house: user.house, verified: !!user.verified, credits: creditBalance(user.id), isAdmin: user.is_admin } : null} counts={counts} />
+        <main className="mx-auto w-full max-w-[1500px] px-3 pb-24 pt-3 sm:pb-10">{children}</main>
+        <footer className="mt-6 bg-subheader py-6 text-center text-[12px] text-[#ddd]">
+          <div className="mx-auto max-w-[1500px] px-3">
+            <p className="font-bold text-white">{APP_NAME} is a student-run marketplace for {SCHOOL_NAME}.</p>
+            <p className="mt-1">Meet in public places · Pay however you both agree · No shipping, no fees</p>
+          </div>
         </footer>
       </body>
     </html>

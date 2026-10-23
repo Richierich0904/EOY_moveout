@@ -15,13 +15,13 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
   const rehomed = (getDb().prepare("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND status = 'sold'").get(u.id) as { c: number }).c;
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-card p-4">
         <Who id={u.id} name={u.name} house={u.house} gradYear={u.grad_year} />
-        <span className="text-sm text-muted"><b>{rehomed}</b> items rehomed · member since {new Date(u.created_at.replace(" ", "T") + "Z").toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
+        <span className="text-[13px] text-muted"><b>{rehomed}</b> items rehomed · member since {new Date(u.created_at.replace(" ", "T") + "Z").toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
       </div>
       <Badges list={badgesFor(u.id)} />
       <h2 className="text-xl font-bold">Available from {u.name.split(" ")[0]}</h2>
-      {listings.length === 0 ? <p className="text-sm text-muted">Nothing right now.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{listings.map((l) => <ListingCard key={l.id} l={l} />)}</div>}
+      {listings.length === 0 ? <p className="text-[13px] text-muted">Nothing right now.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{listings.map((l) => <ListingCard key={l.id} l={l} />)}</div>}
     </div>
   );
 }

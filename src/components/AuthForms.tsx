@@ -13,7 +13,7 @@ export function LoginForm() {
       <div><label className="label">Password</label><input name="password" type="password" required autoComplete="current-password" className="input" /></div>
       <FormError error={state?.error} />
       <SubmitButton className="btn-primary w-full">Log in</SubmitButton>
-      <p className="text-center text-sm text-muted">New here? <Link href="/signup" className="text-accent underline">Create an account</Link></p>
+      <p className="text-center text-sm text-muted">New here? <Link href="/signup" className="a-link">Create an account</Link></p>
     </form>
   );
 }
@@ -24,7 +24,7 @@ export function SignupForm({ houses, domains }: { houses: string[]; domains: str
   return (
     <form action={action} className="space-y-3">
       <div><label className="label">School email</label><input name="email" type="email" required autoComplete="email" placeholder={domains[0] ? `you@${domains[0]}` : "you@school.edu"} className="input" />
-        {domains.length > 0 && <p className="mt-1 text-xs text-muted">Only {domains.map((d) => "@" + d).join(", ")} addresses can join. That&apos;s how everyone here is a real student.</p>}</div>
+        {domains.length > 0 && <p className="mt-1 text-[12px] text-muted">Only {domains.map((d) => "@" + d).join(", ")} addresses can join. That&apos;s how everyone here is a real student.</p>}</div>
       <div><label className="label">Full name</label><input name="name" required autoComplete="name" className="input" /></div>
       <div className="grid grid-cols-2 gap-3">
         <div><label className="label">House</label><select name="house" className="input">{houses.map((h) => <option key={h}>{h}</option>)}</select></div>
@@ -33,7 +33,7 @@ export function SignupForm({ houses, domains }: { houses: string[]; domains: str
       <div><label className="label">Password</label><input name="password" type="password" required minLength={8} autoComplete="new-password" className="input" /></div>
       <FormError error={state?.error} />
       <SubmitButton className="btn-primary w-full">Create account</SubmitButton>
-      <p className="text-center text-sm text-muted">Already joined? <Link href="/login" className="text-accent underline">Log in</Link></p>
+      <p className="text-center text-sm text-muted">Already joined? <Link href="/login" className="a-link">Log in</Link></p>
     </form>
   );
 }

@@ -9,7 +9,7 @@ export default async function VerifyPage() {
   if (user.verified) redirect("/");
   const devCode = await devVerifyCode();
   return (
-    <div className="mx-auto max-w-sm rounded-2xl border border-line bg-card p-6">
+    <div className="mx-auto max-w-sm rounded-lg border border-line bg-card p-6">
       <h1 className="text-2xl font-bold">Check your email</h1>
       <p className="mb-4 mt-1 text-sm text-muted">We sent a code to <b>{user.email}</b>. Enter it to prove you&apos;re a student.</p>
       <VerifyForm devCode={devCode} />

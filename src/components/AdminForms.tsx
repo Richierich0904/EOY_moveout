@@ -10,7 +10,7 @@ export function AdminForms({ granted, hasDraw }: { granted: boolean; hasDraw: bo
   const inTwoWeeks = new Date(Date.now() + 14 * 86400_000).toISOString().slice(0, 16);
   return (
     <>
-      <section className="rounded-2xl border border-line bg-card p-5">
+      <section className="rounded-lg border border-line bg-card p-5">
         <h2 className="text-lg font-bold">{hasDraw ? "Queue the next draw" : "Start a draw"}</h2>
         <form action={drawAction} className="mt-3 space-y-3">
           <div><label className="label">Name</label><input name="title" required placeholder="e.g. May move-out draw" className="input" /></div>
@@ -27,10 +27,10 @@ export function AdminForms({ granted, hasDraw }: { granted: boolean; hasDraw: bo
           <SubmitButton>Create draw</SubmitButton>
         </form>
       </section>
-      <section className="rounded-2xl border border-line bg-card p-5">
+      <section className="rounded-lg border border-line bg-card p-5">
         <h2 className="text-lg font-bold">Grant credits</h2>
-        <p className="text-sm text-muted">For prizes handed out offline, helping at move-out day, or fixing mistakes. Negative amounts deduct.</p>
-        {granted && <p className="mt-2 rounded-lg bg-accent/10 p-2 text-sm">Done.</p>}
+        <p className="text-[13px] text-muted">For prizes handed out offline, helping at move-out day, or fixing mistakes. Negative amounts deduct.</p>
+        {granted && <p className="mt-2 rounded-lg bg-[#fffbf3] p-2 text-sm">Done.</p>}
         <form action={grantAction} className="mt-3 grid gap-2 sm:grid-cols-[1fr_100px_1fr_auto]">
           <input name="email" type="email" required placeholder="student@school.edu" className="input" />
           <input name="amount" type="number" step="1" required placeholder="⭐ 10" className="input" />

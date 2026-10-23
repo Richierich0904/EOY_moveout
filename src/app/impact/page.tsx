@@ -15,15 +15,15 @@ export default function ImpactPage() {
   const hmax = Math.max(1, ...houses.map((h) => h.rehomed));
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div><h1 className="text-2xl font-bold">Impact at {SCHOOL_NAME}</h1><p className="text-sm text-muted">Every item that changes hands here is one that didn&apos;t go in a skip at the end of the year.</p></div>
+      <div><h1 className="text-2xl font-bold">Impact at {SCHOOL_NAME}</h1><p className="text-[13px] text-muted">Every item that changes hands here is one that didn&apos;t go in a skip at the end of the year.</p></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[["Items rehomed", s.items], ["Kept out of landfill", `~${kg(s.kg)} kg`], ["Given away free", s.freeItems], ["Kept in students' pockets", `$${Math.round(s.dollars)}`]].map(([k, v]) => (
-          <div key={String(k)} className="rounded-xl border border-line bg-card p-4"><div className="text-2xl font-black">{v}</div><div className="text-xs text-muted">{k}</div></div>
+          <div key={String(k)} className="rounded-lg border border-line bg-card p-4"><div className="text-2xl font-black">{v}</div><div className="text-[12px] text-muted">{k}</div></div>
         ))}
       </div>
-      <div className="rounded-xl border border-line bg-card p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <h2 className="font-bold">🏆 House cup</h2>
-        <p className="mb-3 text-xs text-muted">Items rehomed per house. Bragging rights only, for now.</p>
+        <p className="mb-3 text-[12px] text-muted">Items rehomed per house. Bragging rights only, for now.</p>
         <ul className="space-y-2">
           {houses.map((h, i) => (
             <li key={h.house} className="text-sm">
@@ -33,9 +33,9 @@ export default function ImpactPage() {
           ))}
         </ul>
       </div>
-      <div className="rounded-xl border border-line bg-card p-4">
+      <div className="rounded-lg border border-line bg-card p-4">
         <h2 className="mb-3 font-bold">By category</h2>
-        {s.byCategory.length === 0 ? <p className="text-sm text-muted">Nothing rehomed yet. Mark a listing as “gone” and it shows up here.</p> : (
+        {s.byCategory.length === 0 ? <p className="text-[13px] text-muted">Nothing rehomed yet. Mark a listing as “gone” and it shows up here.</p> : (
           <ul className="space-y-2">
             {s.byCategory.map((c) => (
               <li key={c.category} className="text-sm">
@@ -46,7 +46,7 @@ export default function ImpactPage() {
           </ul>
         )}
       </div>
-      <p className="text-sm text-muted">{members} verified students · {live} items available right now. Weights are rough per-category estimates, meant for a sense of scale rather than an audit.</p>
+      <p className="text-[13px] text-muted">{members} verified students · {live} items available right now. Weights are rough per-category estimates, meant for a sense of scale rather than an audit.</p>
     </div>
   );
 }

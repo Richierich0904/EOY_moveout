@@ -33,6 +33,7 @@ export type ListingFilters = {
   fall?: boolean;
   course?: string;
   maxPrice?: number;
+  minPrice?: number;
   sort?: "new" | "cheap" | "pricey";
   status?: "available" | "all";
   userId?: number;
@@ -53,6 +54,7 @@ export function searchListings(f: ListingFilters = {}): Listing[] {
   if (f.free) where.push("l.price_cents = 0");
   if (f.fall) where.push("l.handoff = 'fall'");
   if (f.maxPrice !== undefined) { where.push("l.price_cents <= ?"); params.push(f.maxPrice); }
+  if (f.minPrice !== undefined) { where.push("l.price_cents >= ?"); params.push(f.minPrice); }
   if (f.course) { where.push("UPPER(REPLACE(l.course_code,' ','')) = ?"); params.push(f.course.toUpperCase().replace(/\s/g, "")); }
   if (f.q) {
     const like = `%${f.q.trim()}%`;
