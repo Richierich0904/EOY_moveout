@@ -17,38 +17,42 @@ export default async function WantPage({ params }: { params: Promise<{ id: strin
   const user = await getCurrentUser();
   const mine = user?.id === w.user_id;
   const maybe = searchListings({ category: w.category, maxPrice: w.max_price_cents ?? undefined, limit: 4 });
+  const first = w.user_name.split(" ")[0];
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
-      <div className="rounded-lg border border-line bg-card p-5">
-        <div className="text-xs font-bold uppercase tracking-wide text-muted">Wanted · {categoryLabel(w.category)}{w.status === "fulfilled" ? " · Found it ✅" : ""}</div>
-        <h1 className="mt-1 text-2xl font-bold">{w.title}</h1>
-        <p className="mt-1 text-lg font-bold">{w.max_price_cents !== null ? `Will pay up to ${money(w.max_price_cents)}` : "Open to any price"}</p>
-        {w.description && <p className="mt-3 whitespace-pre-wrap">{w.description}</p>}
-        <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
+    <div className="mx-auto grid max-w-3xl gap-12">
+      <header className="rise grid gap-3">
+        <p className="eyebrow">Wanted · {categoryLabel(w.category)}{w.status === "fulfilled" ? " · Found" : ""}</p>
+        <h1 className="text-[clamp(2.2rem,5vw,3.4rem)]">{w.title}</h1>
+        <p className="display text-[22px] text-muted">{w.max_price_cents !== null ? `Will pay up to ${money(w.max_price_cents)}` : "Open to any price"}</p>
+        {w.description && <p className="max-w-[34em] whitespace-pre-wrap text-[17px] leading-relaxed">{w.description}</p>}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
           <Who id={w.user_id} name={w.user_name} house={w.user_house} gradYear={w.user_grad_year} />
-          <span className="text-[12px] text-muted">{timeAgo(w.created_at)}</span>
+          <span className="text-[13.5px] text-muted">Posted {timeAgo(w.created_at)}</span>
         </div>
-      </div>
+      </header>
 
       {mine ? (
-        <div className="flex gap-2 rounded-lg border border-accent/40 bg-card p-4">
+        <div className="card flex flex-wrap gap-2 p-5">
           <form action={setWantStatus}><input type="hidden" name="id" value={w.id} /><input type="hidden" name="status" value={w.status === "open" ? "fulfilled" : "open"} />
             <button className="btn-primary">{w.status === "open" ? "Mark as found" : "Reopen"}</button></form>
-          <form action={deleteWant}><input type="hidden" name="id" value={w.id} /><button className="btn-ghost text-free">Delete</button></form>
-          <Link href="/listings/new" className="btn-ghost ml-auto">List something</Link>
+          <form action={deleteWant}><input type="hidden" name="id" value={w.id} /><button className="btn-ghost">Delete</button></form>
+          <Link href="/listings/new" className="btn-ghost sm:ml-auto">List something</Link>
         </div>
       ) : user ? (
-        <div className="rounded-lg border border-line bg-card p-4">
-          <h2 className="mb-2 font-bold">Got one? Tell {w.user_name.split(" ")[0]}</h2>
-          <MessageForm wantId={w.id} placeholder="Hey, I have one of these. It's…" />
+        <div className="card grid gap-3 p-5 sm:p-6">
+          <h2 className="text-[22px]">Got one? Tell {first}.</h2>
+          <MessageForm wantId={w.id} placeholder="Hey, I have one of these. It's…" buttonLabel={`Message ${first}`} />
         </div>
       ) : (
-        <div className="rounded-lg border border-line bg-card p-4 text-sm"><Link href="/login" className="a-link font-medium">Log in</Link> to reply.</div>
+        <div className="card p-5 text-[15px]"><Link href="/login" className="a-link font-semibold">Log in</Link> to reply.</div>
       )}
 
       {maybe.length > 0 && (
-        <div><h2 className="mb-2 text-sm font-bold text-muted">Listings that might fit</h2><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{maybe.map((l) => <ListingCard key={l.id} l={l} />)}</div></div>
+        <section className="grid gap-5">
+          <div className="reveal grid gap-1"><p className="eyebrow">Already on the shelves</p><h2>Listings that might fit</h2></div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">{maybe.map((l, i) => <div key={l.id} className="reveal" style={{ ["--i" as string]: i }}><ListingCard l={l} /></div>)}</div>
+        </section>
       )}
     </div>
   );

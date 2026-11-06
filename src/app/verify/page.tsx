@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { VerifyForm } from "@/components/AuthForms";
 import { devVerifyCode, resendCode } from "@/actions/auth";
+import { PageIntro } from "@/components/PageIntro";
 
 export default async function VerifyPage() {
   const user = await getCurrentUser();
@@ -9,11 +10,12 @@ export default async function VerifyPage() {
   if (user.verified) redirect("/");
   const devCode = await devVerifyCode();
   return (
-    <div className="mx-auto max-w-sm rounded-lg border border-line bg-card p-6">
-      <h1 className="text-2xl font-bold">Check your email</h1>
-      <p className="mb-4 mt-1 text-sm text-muted">We sent a code to <b>{user.email}</b>. Enter it to prove you&apos;re a student.</p>
-      <VerifyForm devCode={devCode} />
-      <form action={resendCode} className="mt-3 text-center"><button className="text-sm text-muted underline">Send a new code</button></form>
+    <div className="mx-auto grid max-w-md gap-8">
+      <PageIntro eyebrow="One last step" title="Check your email" sub={<>We sent a code to <b className="font-semibold text-fg">{user.email}</b>. Enter it to prove you&apos;re a student.</>} />
+      <div className="card grid gap-4 p-6 sm:p-8">
+        <VerifyForm devCode={devCode} />
+        <form action={resendCode} className="text-center"><button className="more mx-auto text-[14.5px]">Send a new code</button></form>
+      </div>
     </div>
   );
 }

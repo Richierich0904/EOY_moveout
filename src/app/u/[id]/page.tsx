@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { searchListings } from "@/lib/listings";
 import { ListingCard } from "@/components/ListingCard";
-import { Who } from "@/components/Avatar";
 import { Badges } from "@/components/Badges";
 import { badgesFor } from "@/lib/game";
+import { classYear } from "@/lib/format";
 
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,15 +13,23 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
   if (!u) notFound();
   const listings = searchListings({ userId: u.id });
   const rehomed = (getDb().prepare("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND status = 'sold'").get(u.id) as { c: number }).c;
+  const since = new Date(u.created_at.replace(" ", "T") + "Z").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const first = u.name.split(" ")[0];
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-card p-4">
-        <Who id={u.id} name={u.name} house={u.house} gradYear={u.grad_year} />
-        <span className="text-[13px] text-muted"><b>{rehomed}</b> items rehomed · member since {new Date(u.created_at.replace(" ", "T") + "Z").toLocaleDateString(undefined, { month: "short", year: "numeric" })}</span>
-      </div>
-      <Badges list={badgesFor(u.id)} />
-      <h2 className="text-xl font-bold">Available from {u.name.split(" ")[0]}</h2>
-      {listings.length === 0 ? <p className="text-[13px] text-muted">Nothing right now.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{listings.map((l) => <ListingCard key={l.id} l={l} />)}</div>}
+    <div className="grid gap-14">
+      <header className="rise intro">
+        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/15 text-[26px] font-semibold text-accent-deep">{u.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</span>
+        <p className="eyebrow">{u.house} · Class of {classYear(u.grad_year)}</p>
+        <h1 className="text-[clamp(2.2rem,5vw,3.2rem)]">{u.name}</h1>
+        <p className="sub">{rehomed} item{rehomed === 1 ? "" : "s"} rehomed · on Swap since {since}</p>
+        <Badges list={badgesFor(u.id)} />
+      </header>
+      <section className="grid gap-5">
+        <div className="reveal grid gap-1"><p className="eyebrow">On {first}&apos;s shelf</p><h2>Available from {first}</h2></div>
+        {listings.length === 0 ? <p className="card p-8 text-center text-muted">Nothing right now.</p> : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">{listings.map((l, i) => <div key={l.id} className="reveal" style={{ ["--i" as string]: i % 4 }}><ListingCard l={l} /></div>)}</div>
+        )}
+      </section>
     </div>
   );
 }

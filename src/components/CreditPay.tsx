@@ -10,10 +10,10 @@ export function CreditPay({ listingId, priceCents, balance }: { listingId: numbe
   return (
     <form action={action} className="space-y-2">
       <input type="hidden" name="id" value={listingId} />
-      <p className="text-[13px]">⭐ Takes <b>{priceCents / 100} credits</b>. You have {balance / 100}.</p>
+      <p className="text-[14.5px]">⭐ The seller takes <b>{priceCents / 100} credits</b>. You have {balance / 100}.</p>
       <FormError error={state?.error} />
       {enough ? <SubmitButton className="btn-orange w-full">Reserve with credits</SubmitButton>
-        : <p className="text-[12px] text-muted">Win credits in the <a href="/lottery" className="underline">giveaway draw</a>.</p>}
+        : <p className="text-[13px] text-muted">Win credits in the <a href="/lottery" className="a-link">giveaway draw</a>.</p>}
     </form>
   );
 }

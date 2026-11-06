@@ -115,3 +115,19 @@ export function impactStats(): Impact {
     byCategory,
   };
 }
+
+/** One row per category: how many items are available and the newest photo, for the "shelves" row. */
+export function categoryShelves(): { category: string; count: number; image: string | null }[] {
+  return getDb().prepare(
+    `SELECT c.category, COUNT(*) AS count,
+       (SELECT i.file FROM listings l2 JOIN listing_images i ON i.listing_id = l2.id
+        WHERE l2.category = c.category AND l2.status = 'available' ORDER BY l2.created_at DESC, i.position LIMIT 1) AS image
+     FROM listings c WHERE c.status = 'available' GROUP BY c.category`).all() as { category: string; count: number; image: string | null }[];
+}
+
+/** Newest available listings that have a photo, for the hero collage. */
+export function heroImages(n = 3): { id: number; title: string; image: string }[] {
+  return getDb().prepare(
+    `SELECT l.id, l.title, (SELECT file FROM listing_images i WHERE i.listing_id = l.id ORDER BY position LIMIT 1) AS image
+     FROM listings l WHERE l.status = 'available' AND image IS NOT NULL ORDER BY l.created_at DESC LIMIT ?`).all(n) as { id: number; title: string; image: string }[];
+}

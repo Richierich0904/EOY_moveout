@@ -2,32 +2,37 @@ import Link from "next/link";
 import { listWants } from "@/lib/social";
 import { categoryLabel } from "@/lib/config";
 import { money, timeAgo } from "@/lib/format";
+import { PageIntro } from "@/components/PageIntro";
 
 export default async function WantedPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;
   const wants = listWants({ q });
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div><h1 className="text-2xl font-bold">Wanted</h1><p className="text-[13px] text-muted">Looking for something? Say so. Sellers get pinged when they list a match.</p></div>
-        <Link href="/wanted/new" className="btn-primary">+ Post a wanted ad</Link>
-      </div>
-      <form action="/wanted"><input name="q" defaultValue={q} placeholder="Search wanted posts…" className="input" /></form>
+    <div className="mx-auto grid max-w-4xl gap-10">
+      <PageIntro eyebrow="The wanted board" title="Ask, and somebody down the hall probably has it." sub="Post what you need. Anyone who lists a match gets nudged to message you.">
+        <Link href="/wanted/new" className="btn-primary">Post a wanted ad</Link>
+      </PageIntro>
+      <form action="/wanted" role="search" className="reveal mx-auto w-full max-w-md">
+        <label htmlFor="wanted-q" className="sr-only">Search wanted posts</label>
+        <input id="wanted-q" name="q" defaultValue={q} placeholder="Search wanted posts…" className="input rounded-full" />
+      </form>
       {wants.length === 0 ? (
-        <p className="rounded-lg border border-line bg-card p-8 text-center text-muted">No wanted posts{q ? ` for “${q}”` : ""} yet.</p>
+        <p className="card p-10 text-center text-muted">No wanted posts{q ? ` for “${q}”` : ""} yet.</p>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-card">
-          {wants.map((w) => (
-            <li key={w.id}><Link href={`/wanted/${w.id}`} className="flex items-center gap-3 p-4 hover:bg-bg">
-              <span className="text-2xl">🙋</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{w.title}</span>
-                <span className="block text-[12px] text-muted">{categoryLabel(w.category)} · {w.user_name}, {w.user_house} · {timeAgo(w.created_at)}</span>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {wants.map((w, i) => (
+            <Link key={w.id} href={`/wanted/${w.id}`} className="card lift reveal grid gap-2 p-5" style={{ ["--i" as string]: i % 2 }}>
+              <span className="flex items-center justify-between gap-2 text-[12.5px] font-semibold uppercase tracking-[.1em] text-muted">
+                <span>{categoryLabel(w.category)}</span><span className="normal-case tracking-normal">{timeAgo(w.created_at)}</span>
               </span>
-              <span className="shrink-0 text-sm font-bold">{w.max_price_cents !== null ? `≤ ${money(w.max_price_cents)}` : "Any price"}</span>
-            </Link></li>
+              <span className="display text-[22px] leading-snug">{w.title}</span>
+              <span className="flex items-baseline justify-between gap-2 text-[14px] text-muted">
+                <span>{w.user_name.split(" ")[0]}, {w.user_house}</span>
+                <span className="display text-[17px] text-fg">{w.max_price_cents !== null ? `up to ${money(w.max_price_cents)}` : "any price"}</span>
+              </span>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

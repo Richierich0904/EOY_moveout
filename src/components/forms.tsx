@@ -9,5 +9,5 @@ export function SubmitButton({ children, className = "btn-primary" }: { children
 
 export function FormError({ error }: { error?: string }) {
   if (!error) return null;
-  return <p role="alert" className="rounded-lg border border-free/40 bg-free/10 px-3 py-2 text-sm text-free">{error}</p>;
+  return <p role="alert" className="rounded-[10px] border border-accent/40 bg-accent/10 px-3.5 py-2.5 text-[14px] text-accent-deep">{error}</p>;
 }
