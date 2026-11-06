@@ -41,7 +41,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
       <form action={sendMessage} className="sticky bottom-[calc(64px+env(safe-area-inset-bottom,0px))] flex gap-2 bg-bg/90 py-2 backdrop-blur sm:bottom-0">
         <input type="hidden" name="thread_id" value={t.id} />
         <label htmlFor="thread-body" className="sr-only">Message</label>
-        <input id="thread-body" name="body" required autoComplete="off" placeholder="Write a message…" className="input rounded-full" />
+        <input id="thread-body" name="body" required autoComplete="off" placeholder="Write a message…" className="input" />
         <SubmitButton>Send</SubmitButton>
       </form>
       <p className="text-center text-[13px] text-muted">Agree on a spot and a time. Meet somewhere public. Pay in cash or whatever app you both use.</p>

@@ -30,7 +30,7 @@ export function AdminForms({ granted, hasDraw }: { granted: boolean; hasDraw: bo
       <section className="card grid gap-3 p-5 sm:p-7">
         <h2>Grant credits</h2>
         <p className="text-[13px] text-muted">For prizes handed out offline, helping at move-out day, or fixing mistakes. Negative amounts deduct.</p>
-        {granted && <p className="rounded-[10px] bg-moss/12 p-3 text-[14.5px]">Done.</p>}
+        {granted && <p className="bg-bg-deep p-3 text-[14.5px]">Done.</p>}
         <form action={grantAction} className="grid gap-2 sm:grid-cols-[1fr_100px_1fr_auto]">
           <input aria-label="Student email" name="email" type="email" required placeholder="student@school.edu" className="input" />
           <input aria-label="Credits" name="amount" type="number" step="1" required placeholder="⭐ 10" className="input" />

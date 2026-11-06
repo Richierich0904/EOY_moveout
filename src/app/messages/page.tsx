@@ -20,7 +20,7 @@ export default async function MessagesPage() {
           {threads.map((t) => (
             <li key={t.id}>
               <Link href={`/messages/${t.id}`} className="grid grid-cols-[auto_1fr] items-center gap-3.5 px-5 py-4 transition-colors hover:bg-bg">
-                <span className={`flex h-11 w-11 items-center justify-center rounded-full text-[14px] font-semibold ${t.unread ? "bg-accent text-white" : "bg-accent/15 text-accent-deep"}`}>
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full text-[14px] font-semibold ${t.unread ? "bg-accent text-white" : "bg-fg text-bg"}`}>
                   {t.other_name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
                 </span>
                 <span className="min-w-0">

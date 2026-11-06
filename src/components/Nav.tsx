@@ -1,64 +1,72 @@
 import Link from "next/link";
-import { TabBar } from "./TabBar";
+import { NavMenu } from "./NavMenu";
+import { Icon, Mark } from "./Icons";
+import { CATEGORIES } from "@/lib/config";
 
 type Props = {
   appName: string;
   user: { name: string; credits: number; isAdmin: boolean } | null;
   counts: { notifications: number; messages: number };
+  categoryCounts: Record<string, number>;
 };
 
 function Dot({ n }: { n: number }) {
   if (!n) return null;
-  return <span className="ml-1 inline-flex min-w-[17px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold leading-[17px] text-white">{n > 9 ? "9+" : n}</span>;
+  return <span className="absolute -right-1 -top-1 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white ring-2 ring-bg">{n > 9 ? "9+" : n}</span>;
 }
 
-const navLink = "rounded-full px-2.5 py-1.5 text-[13.5px] font-medium text-fg/80 transition-colors hover:text-fg";
+const round = "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-fg text-bg transition hover:opacity-80";
+const textLink = "text-[12.5px] font-medium tracking-[.03em] transition hover:text-accent [font-stretch:112%]";
 
-export function Nav({ appName, user, counts }: Props) {
+export function Nav({ appName, user, counts, categoryCounts }: Props) {
   const first = user?.name.split(" ")[0];
+  const sections = [
+    { href: "/", label: "Shop" }, { href: "/wanted", label: "Wanted" }, { href: "/lottery", label: "Giveaway draw" }, { href: "/impact", label: "Impact" },
+    ...(user ? [{ href: "/messages", label: "Messages", count: counts.messages }, { href: "/alerts", label: "Alerts", count: counts.notifications }, { href: "/me", label: "My account" }] : [{ href: "/login", label: "Log in" }, { href: "/signup", label: "Join" }]),
+    ...(user?.isAdmin ? [{ href: "/admin", label: "Organisers" }] : []),
+  ];
+  const categories = CATEGORIES.map((c) => ({ href: `/?category=${c.slug}#browse`, label: c.label, count: categoryCounts[c.slug] ?? 0 }));
   return (
-    <>
-      <header id="site-nav"
-        className="sticky top-[env(safe-area-inset-top,0px)] z-30 border-b border-line/70 bg-[var(--nav)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-500 ease-[cubic-bezier(.25,.1,.25,1)] data-[hidden]:-translate-y-full">
-        <div className="mx-auto flex h-[52px] max-w-6xl items-center gap-3 pl-[max(16px,env(safe-area-inset-left,0px))] pr-[max(16px,env(safe-area-inset-right,0px))]">
-          <Link href="/" className="display flex shrink-0 items-center gap-2 text-[20px] font-semibold">
-            <span aria-hidden className="h-3 w-3 rounded-full bg-accent shadow-[inset_-3px_-3px_0_var(--terracotta-deep)]" />{appName}
-          </Link>
-          <form action="/" role="search" className="mx-auto hidden w-full max-w-sm md:block">
-            <label htmlFor="nav-q" className="sr-only">Search</label>
-            <input id="nav-q" name="q" placeholder="Search mini fridge, MATH 301, lamp…"
-              className="w-full rounded-full border-[1.5px] border-line bg-card/70 px-4 py-1.5 text-[14px] outline-none transition-colors focus:border-accent" />
-          </form>
-          <nav aria-label="Sections" className="ml-auto hidden items-center sm:flex">
-            <Link href="/wanted" className={navLink}>Wanted</Link>
-            <Link href="/lottery" className={navLink}>Draw</Link>
-            <Link href="/impact" className={`${navLink} hidden lg:inline`}>Impact</Link>
-            {user ? (
-              <>
-                <Link href="/messages" className={navLink}>Messages<Dot n={counts.messages} /></Link>
-                <Link href="/alerts" className={navLink}>Alerts<Dot n={counts.notifications} /></Link>
-                {user.isAdmin && <Link href="/admin" className={`${navLink} hidden lg:inline`}>Organisers</Link>}
-                <Link href="/me" className={navLink}>{first}{user.credits > 0 && <span className="ml-1 text-muted">· ⭐{user.credits / 100}</span>}</Link>
-                <Link href="/listings/new" className="ml-1.5 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-accent-deep">Sell</Link>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className={navLink}>Log in</Link>
-                <Link href="/signup" className="ml-1.5 rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-accent-deep">Join</Link>
-              </>
-            )}
+    <header id="site-nav"
+      className="sticky top-[env(safe-area-inset-top,0px)] z-30 bg-[var(--nav)] backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(.25,.1,.25,1)] data-[hidden]:-translate-y-full">
+      <div className="mx-auto grid h-[64px] max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-3 pl-[max(16px,env(safe-area-inset-left,0px))] pr-[max(16px,env(safe-area-inset-right,0px))] sm:h-[76px] sm:px-8">
+        <div className="flex items-center gap-6">
+          <NavMenu sections={sections} categories={categories} />
+          <nav aria-label="Sections" className="hidden items-center gap-6 md:flex">
+            <Link href="/" className={textLink}>Home</Link>
+            <Link href="/wanted" className={textLink}>Wanted</Link>
+            <Link href="/lottery" className={textLink}>Draw</Link>
+            <Link href="/impact" className={`${textLink} hidden lg:inline`}>Impact</Link>
           </nav>
-          {/* phones: compact right side */}
-          <div className="ml-auto flex items-center gap-1 sm:hidden">
-            {user ? (
-              <Link href="/messages" className={navLink}>Messages<Dot n={counts.messages} /></Link>
-            ) : (
-              <Link href="/signup" className="rounded-full bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-white">Join</Link>
-            )}
-          </div>
         </div>
-      </header>
-      <TabBar signedIn={!!user} badge={counts.notifications} />
-    </>
+
+        <Link href="/" aria-label={`${appName} home`} className="flex items-center gap-1.5 justify-self-center text-fg">
+          <Mark size={24} /><span className="display hidden text-[15px] uppercase tracking-[.02em] sm:inline">{appName}</span>
+        </Link>
+
+        <div className="flex items-center justify-end gap-2 sm:gap-2.5">
+          {user ? (
+            <>
+              <Link href="/alerts" aria-label={`Alerts${counts.notifications ? `, ${counts.notifications} new` : ""}`} className={`${round} hidden sm:flex`}><Icon name="bell" size={16} /><Dot n={counts.notifications} /></Link>
+              <Link href="/messages" aria-label={`Messages${counts.messages ? `, ${counts.messages} unread` : ""}`} className={round}><Icon name="chat" size={16} /><Dot n={counts.messages} /></Link>
+              <Link href="/listings/new" className="flex h-9 items-center gap-2 rounded-full bg-accent pl-4 pr-1 text-[11.5px] font-semibold uppercase tracking-[.08em] text-white transition hover:bg-accent-deep [font-stretch:112%]">
+                <span className="hidden sm:inline">Sell</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full ring-[1.5px] ring-white"><Icon name="plus" size={14} stroke={2.2} /></span>
+              </Link>
+              <Link href="/me" aria-label="My account" className={round}><Icon name="user" size={16} /><span className="sr-only">{first}</span>
+                {user.credits > 0 && <span className="absolute -bottom-1 -right-2 rounded-full bg-bg px-1 text-[10px] font-bold text-fg ring-1 ring-line">⭐{user.credits / 100}</span>}
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className={`${textLink} hidden sm:inline`}>Log in</Link>
+              <Link href="/signup" className="flex h-9 items-center gap-2 rounded-full bg-accent pl-4 pr-1 text-[11.5px] font-semibold uppercase tracking-[.08em] text-white transition hover:bg-accent-deep [font-stretch:112%]">
+                Join<span className="flex h-7 w-7 items-center justify-center rounded-full ring-[1.5px] ring-white"><Icon name="arrow" size={13} stroke={2.2} /></span>
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
   );
 }

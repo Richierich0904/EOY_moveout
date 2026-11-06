@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "./Icons";
 
-/** Edge-to-edge snap row with drag-to-scroll and small round prev/next controls. */
+/** Edge-to-edge snap row with drag-to-scroll and square prev/next arrows centred underneath. */
 export function Shelves({ children, label }: { children: React.ReactNode; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
@@ -17,16 +18,14 @@ export function Shelves({ children, label }: { children: React.ReactNode; label:
     sc.addEventListener("pointerdown", down); sc.addEventListener("pointermove", move); sc.addEventListener("pointerup", up); sc.addEventListener("pointercancel", up); sc.addEventListener("click", click, true);
     return () => { sc.removeEventListener("scroll", upd); window.removeEventListener("resize", upd); sc.removeEventListener("pointerdown", down); sc.removeEventListener("pointermove", move); sc.removeEventListener("pointerup", up); sc.removeEventListener("pointercancel", up); sc.removeEventListener("click", click, true); };
   }, []);
-  const go = (dir: number) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.7, behavior: "smooth" });
-  const btn = "flex h-9 w-9 items-center justify-center rounded-full bg-fg/[.07] text-fg transition hover:bg-fg/[.13] active:scale-95 disabled:opacity-30";
+  const go = (dir: number) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.75, behavior: "smooth" });
+  const btn = "flex h-8 w-8 items-center justify-center border border-line bg-card text-fg transition hover:border-fg disabled:opacity-35 disabled:hover:border-line";
   return (
-    <div>
-      <div ref={ref} tabIndex={0} aria-label={label} className="scroller-row -mx-[max(16px,env(safe-area-inset-left,0px))] scroll-px-[max(16px,env(safe-area-inset-left,0px))] cursor-grab px-[max(16px,env(safe-area-inset-left,0px))] py-2 active:cursor-grabbing">
-        {children}
-      </div>
-      <div className="mt-2 hidden justify-end gap-1.5 sm:flex">
-        <button type="button" aria-label={`Scroll ${label} back`} className={btn} disabled={edges.start} onClick={() => go(-1)}>←</button>
-        <button type="button" aria-label={`Scroll ${label} forward`} className={btn} disabled={edges.end} onClick={() => go(1)}>→</button>
+    <div className="grid gap-5">
+      <div ref={ref} tabIndex={0} aria-label={label} className="scroller-row cursor-grab gap-4 active:cursor-grabbing">{children}</div>
+      <div className="flex justify-center gap-2">
+        <button type="button" aria-label={`Scroll ${label} back`} className={btn} disabled={edges.start} onClick={() => go(-1)}><Icon name="left" size={15} /></button>
+        <button type="button" aria-label={`Scroll ${label} forward`} className={btn} disabled={edges.end} onClick={() => go(1)}><Icon name="right" size={15} /></button>
       </div>
     </div>
   );

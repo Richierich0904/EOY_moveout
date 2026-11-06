@@ -47,7 +47,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       {(listed || awaiting.length > 0) && (
         <div className="-mt-6 grid gap-3">
-          {listed && <p className="rounded-[10px] bg-moss/12 p-4 text-[15px]">Posted {listed} items. Open any of them to add photos or details.</p>}
+          {listed && <p className="bg-bg-deep p-4 text-[15px]">Posted {listed} items. Open any of them to add photos or details.</p>}
           {awaiting.length > 0 && <p className="card p-4 text-[15px]">{awaiting.length} handoff{awaiting.length === 1 ? " is" : "s are"} waiting for the receiver to confirm. Giveaways only count for the <Link href="/lottery" className="a-link">draw</Link> once they do, so give them a nudge.</p>}
         </div>
       )}
@@ -66,7 +66,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
             {history.map((h) => (
               <li key={h.id} className="flex items-baseline justify-between gap-3 px-5 py-3.5 text-[15px]">
                 <span>{h.reason}</span>
-                <span className="shrink-0 text-right"><span className={`display text-[18px] tabular-nums ${h.delta < 0 ? "text-accent-deep" : "text-moss-deep"}`}>{h.delta > 0 ? "+" : ""}{h.delta / 100}</span> <span className="text-[12.5px] text-muted">· {timeAgo(h.created_at)}</span></span>
+                <span className="shrink-0 text-right"><span className={`display text-[18px] tabular-nums ${h.delta < 0 ? "text-accent-deep" : "text-fg"}`}>{h.delta > 0 ? "+" : ""}{h.delta / 100}</span> <span className="text-[12.5px] text-muted">· {timeAgo(h.created_at)}</span></span>
               </li>
             ))}
           </ul>
@@ -79,7 +79,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <ul className="card reveal divide-y divide-line overflow-hidden">
             {wants.map((w) => (
               <li key={w.id}><Link href={`/wanted/${w.id}`} className="flex items-baseline justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-bg">
-                <span className="font-semibold">{w.title}{w.status === "fulfilled" && <span className="ml-2 text-[13px] font-medium text-moss-deep">Found</span>}</span>
+                <span className="font-semibold">{w.title}{w.status === "fulfilled" && <span className="ml-2 text-[13px] font-medium text-fg">Found</span>}</span>
                 <span className="text-[14px] text-muted">{w.max_price_cents !== null ? `up to ${money(w.max_price_cents)}` : "any price"}</span>
               </Link></li>
             ))}

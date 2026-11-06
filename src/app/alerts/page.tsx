@@ -41,13 +41,13 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
 
       <section className="reveal grid gap-4">
         <h2>Saved searches</h2>
-        {saved && <p className="rounded-[10px] bg-moss/12 p-3 text-[14.5px]">Saved. You&apos;ll hear about it here.</p>}
+        {saved && <p className="bg-bg-deep p-3 text-[14.5px]">Saved. You&apos;ll hear about it here.</p>}
         {searches.length === 0 ? (
           <p className="card p-6 text-[15px] text-muted">None yet. Search from the <Link href="/#browse" className="a-link">shelves</Link> and tap “Alert me about new matches”.</p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {searches.map((s) => (
-              <li key={s.id} className="inline-flex items-center gap-2 rounded-full bg-card py-1.5 pl-4 pr-1.5 text-[14px] shadow-soft">
+              <li key={s.id} className="inline-flex items-center gap-2 border border-line bg-card py-1 pl-3 pr-1 text-[12.5px]">
                 <span>{[s.query && `“${s.query}”`, s.category && categoryLabel(s.category), s.free_only ? "free only" : null, s.max_price_cents !== null && `under ${money(s.max_price_cents)}`].filter(Boolean).join(" · ")}</span>
                 <form action={deleteSavedSearch}><input type="hidden" name="id" value={s.id} /><button aria-label="Remove saved search" className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition hover:bg-fg/[.07] hover:text-fg">×</button></form>
               </li>

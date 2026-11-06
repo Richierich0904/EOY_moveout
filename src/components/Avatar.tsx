@@ -5,10 +5,10 @@ export function Who({ id, name, house, gradYear, small }: { id: number; name: st
   const initials = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   return (
     <Link href={`/u/${id}`} className="flex items-center gap-2">
-      <span className={`flex ${small ? "h-7 w-7 text-xs" : "h-10 w-10 text-sm"} items-center justify-center rounded-full bg-accent/15 font-semibold text-accent-deep`}>{initials}</span>
+      <span className={`flex ${small ? "h-7 w-7 text-xs" : "h-10 w-10 text-sm"} items-center justify-center rounded-full bg-fg font-semibold text-bg`}>{initials}</span>
       <span className="leading-tight">
         <span className="block font-semibold">{name}</span>
-        <span className="block text-[13px] text-muted">{house} · Class of {classYear(gradYear)}</span>
+        <span className="block text-[11.5px] text-muted">{house} · Class of {classYear(gradYear)}</span>
       </span>
     </Link>
   );

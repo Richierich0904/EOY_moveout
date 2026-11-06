@@ -18,7 +18,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="grid gap-14">
       <header className="rise intro">
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/15 text-[26px] font-semibold text-accent-deep">{u.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</span>
+        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-fg text-[26px] font-semibold text-bg">{u.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</span>
         <p className="eyebrow">{u.house} · Class of {classYear(u.grad_year)}</p>
         <h1 className="text-[clamp(2.2rem,5vw,3.2rem)]">{u.name}</h1>
         <p className="sub">{rehomed} item{rehomed === 1 ? "" : "s"} rehomed · on Swap since {since}</p>

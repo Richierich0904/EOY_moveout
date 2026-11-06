@@ -34,50 +34,56 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
     .all(l.user_id, l.id) as { id: number; name: string }[]) : [];
   const first = l.seller_name.split(" ")[0];
   const available = l.status === "available";
-  const status = available ? { text: "Available", cls: "text-moss-deep" } : l.status === "pending" ? { text: "Reserved", cls: "text-accent" } : { text: "Rehomed", cls: "text-muted" };
+  const status = available ? "Available" : l.status === "pending" ? "Reserved" : "Rehomed";
+  const rows: [string, React.ReactNode][] = [
+    ["Condition", l.condition],
+    ...(l.course_code ? [["Course", <Link key="c" href={`/?q=${encodeURIComponent(l.course_code)}#browse`} className="a-link">{l.course_code}</Link>] as [string, React.ReactNode]] : []),
+    ["Handoff", l.handoff === "fall" ? "Fall handoff · summer storage, collected at September move-in" : "Meet up this week"],
+    ["Where", l.spot ?? "Anywhere on campus"],
+    ["Listed", timeAgo(l.created_at)],
+    ["Status", status],
+  ];
 
   return (
-    <div className="grid grid-cols-1 gap-16 sm:gap-24">
-      <div className="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-14">
-        <div className="md:sticky md:top-[76px]"><Gallery images={images} title={l.title} /></div>
+    <div className="grid grid-cols-1 gap-20 sm:gap-28">
+      <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-12">
+        <div className="md:sticky md:top-24"><Gallery images={images} title={l.title} /></div>
 
         <div className="rise grid min-w-0 gap-6">
-          <nav aria-label="Breadcrumb" className="text-[13px] text-muted"><Link href="/" className="hover:text-accent">Shelves</Link> <span aria-hidden>›</span> <Link href={`/?category=${l.category}#browse`} className="hover:text-accent">{categoryLabel(l.category)}</Link></nav>
-          <div className="grid gap-2">
-            <p className="eyebrow">{categoryLabel(l.category)}{l.handoff === "fall" ? " · Fall handoff" : ""}</p>
-            <h1 className="text-[clamp(2.1rem,4.4vw,3.2rem)]">{l.title}</h1>
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="text-[11.5px] tracking-[.04em] text-muted"><Link href="/" className="hover:text-fg">Home</Link> / <Link href={`/?category=${l.category}#browse`} className="hover:text-fg">{categoryLabel(l.category)}</Link></p>
+          <div className="grid gap-3">
+            <h1 className="text-[clamp(1.5rem,2.6vw,2rem)] leading-[1]">{l.title}</h1>
+            <div className="flex items-baseline justify-between gap-3 border-b border-line pb-4">
+              <span className="text-[12px] text-muted">{l.accepts_credits === 1 && l.price_cents > 0 ? `No fees · or ⭐ ${l.price_cents / 100} credits` : "No fees · pay the seller directly"}</span>
               <Price cents={l.price_cents} size="lg" />
-              {l.accepts_credits === 1 && l.price_cents > 0 && <span className="text-[14.5px] text-muted">or ⭐ {l.price_cents / 100} credits</span>}
-              <span className={`text-[14.5px] font-semibold ${status.cls}`}>· {status.text}</span>
             </div>
           </div>
 
-          {l.description && <p className="max-w-[34em] whitespace-pre-wrap text-[17px] leading-relaxed">{l.description}</p>}
+          {l.description && <p className="max-w-[36em] whitespace-pre-wrap text-[14px] leading-relaxed">{l.description}</p>}
 
-          <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 border-t border-line pt-4 text-[15px]">
-            <dt className="text-muted">Condition</dt><dd>{l.condition}</dd>
-            {l.course_code && (<><dt className="text-muted">Course</dt><dd><Link href={`/?q=${encodeURIComponent(l.course_code)}#browse`} className="a-link">{l.course_code}</Link></dd></>)}
-            <dt className="text-muted">Handoff</dt><dd>{l.handoff === "fall" ? "Summer storage, collected at September move-in" : "Meet up this week"}</dd>
-            <dt className="text-muted">Where</dt><dd>{l.spot ?? "Anywhere on campus"}</dd>
-            <dt className="text-muted">Listed</dt><dd>{timeAgo(l.created_at)}</dd>
-            <dt className="text-muted">Payment</dt><dd>Cash or any app you both use{l.accepts_credits === 1 && l.price_cents > 0 ? ", or credits" : ""}. No fees.</dd>
+          <dl className="grid grid-cols-[auto_1fr] text-[13px]">
+            {rows.map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt className="border-t border-line py-2.5 pr-6 text-muted">{k}</dt>
+                <dd className={`border-t border-line py-2.5 ${k === "Status" && available ? "font-semibold" : ""}`}>{v}</dd>
+              </div>
+            ))}
           </dl>
 
-          <div className="card grid gap-4 p-5 sm:p-6">
-            {reserved && <p className="rounded-[10px] bg-moss/12 p-3 text-[14.5px]">Reserved with your credits. Message {first} to arrange the handoff.</p>}
-            {!available && !isBuyer && !mine && <p className="text-[14.5px] text-muted">{l.status === "sold" ? "This one found a home." : "Reserved for someone, but ask in case it falls through."}</p>}
+          <div className="grid gap-3">
+            {reserved && <p className="bg-bg-deep p-3 text-[13px]">Reserved with your credits. Message {first} to arrange the handoff.</p>}
+            {!available && !isBuyer && !mine && <p className="text-[13px] text-muted">{l.status === "sold" ? "This one found a home." : "Reserved for someone, but ask in case it falls through."}</p>}
             {isBuyer && l.status === "sold" && !l.received_at && (
-              <form action={confirmReceived} className="grid gap-3 rounded-[10px] bg-moss/12 p-4 text-[14.5px]">
+              <form action={confirmReceived} className="grid gap-3 bg-bg-deep p-4 text-[13px]">
                 <input type="hidden" name="id" value={l.id} />
                 <p>{first} says this is yours now. Did you get it?{l.price_cents === 0 ? " Confirming earns them a lottery ticket." : ""}</p>
-                <button className="btn-orange w-full">Yes, I received it</button>
+                <button className="btn-primary w-full">Yes, I received it</button>
               </form>
             )}
-            {isBuyer && l.received_at && <p className="text-[14.5px] text-moss-deep">✓ You confirmed you received this.</p>}
+            {isBuyer && l.received_at && <p className="text-[13px] font-semibold">✓ You confirmed you received this.</p>}
 
             {mine ? (
-              <OwnerControls listingId={l.id} status={l.status} buyerId={l.buyer_id} chatters={chatters} />
+              <div className="card p-5"><OwnerControls listingId={l.id} status={l.status} buyerId={l.buyer_id} chatters={chatters} /></div>
             ) : user ? (
               <>
                 {l.accepts_credits === 1 && l.price_cents > 0 && available && <CreditPay listingId={l.id} priceCents={l.price_cents} balance={balance} />}
@@ -86,26 +92,26 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
             ) : (
               <Link href="/login" className="btn-primary w-full">Log in to message {first}</Link>
             )}
-            <p className="text-[13px] text-muted">Meet somewhere public on campus, and look the item over before you pay.</p>
+            <p className="text-[11.5px] text-muted">Meet somewhere public on campus, and look the item over before you pay.</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
             <Who id={l.user_id} name={l.seller_name} house={l.seller_house} gradYear={l.seller_grad_year} />
-            <span className="text-[13.5px] text-muted">{rehomed} item{rehomed === 1 ? "" : "s"} rehomed</span>
+            <span className="text-[11.5px] uppercase tracking-[.08em] text-muted">{rehomed} rehomed</span>
             <div className="w-full"><Badges list={badgesFor(l.user_id)} /></div>
           </div>
         </div>
       </div>
 
       {more.length > 0 && (
-        <section className="grid grid-cols-1 gap-5">
-          <div className="reveal flex items-end justify-between gap-3">
-            <div className="grid gap-1"><p className="eyebrow">Same room</p><h2 className="text-[clamp(1.6rem,3vw,2.2rem)]">More from {first}</h2></div>
-            <Link href={`/u/${l.user_id}`} className="more">All of {first}&apos;s things</Link>
+        <section className="grid grid-cols-1 gap-8">
+          <div className="reveal flex items-end justify-between gap-4">
+            <h2 className="text-[clamp(1.8rem,4vw,2.8rem)] leading-[.9]">More from<br />{first}<span className="count ml-1">({more.length})</span></h2>
+            <Link href={`/u/${l.user_id}`} className="text-[12px] tracking-[.03em] underline-offset-4 hover:underline">See all</Link>
           </div>
           <div className="reveal">
             <Shelves label={`More from ${first}`}>
-              {more.map((x) => <div key={x.id} className="w-[220px] shrink-0 snap-start"><ListingCard l={x} /></div>)}
+              {more.map((x) => <div key={x.id} className="w-[min(62vw,230px)] shrink-0 snap-start"><ListingCard l={x} /></div>)}
             </Shelves>
           </div>
         </section>

@@ -42,7 +42,7 @@ export function VerifyForm({ devCode }: { devCode: string | null }) {
   const [state, action] = useActionState(verify, undefined);
   return (
     <form action={action} className="grid gap-4">
-      {devCode && <p className="rounded-[10px] bg-moss/12 p-3.5 text-[14.5px]">Email sending isn&apos;t set up yet, so here&apos;s your code: <b className="font-mono text-[18px] tracking-[.2em]">{devCode}</b></p>}
+      {devCode && <p className="bg-bg-deep p-3.5 text-[14.5px]">Email sending isn&apos;t set up yet, so here&apos;s your code: <b className="font-mono text-[18px] tracking-[.2em]">{devCode}</b></p>}
       <div><label className="label" htmlFor="verify-code">6-digit code</label><input id="verify-code" name="code" inputMode="numeric" pattern="[0-9]{6}" required autoFocus className="input text-center font-mono text-[26px] tracking-[.5em]" /></div>
       <FormError error={state?.error} />
       <SubmitButton className="btn-primary w-full">Verify</SubmitButton>

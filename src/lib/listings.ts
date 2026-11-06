@@ -131,3 +131,13 @@ export function heroImages(n = 3): { id: number; title: string; image: string }[
     `SELECT l.id, l.title, (SELECT file FROM listing_images i WHERE i.listing_id = l.id ORDER BY position LIMIT 1) AS image
      FROM listings l WHERE l.status = 'available' AND image IS NOT NULL ORDER BY l.created_at DESC LIMIT ?`).all(n) as { id: number; title: string; image: string }[];
 }
+
+/** Counts for the filter sidebar. */
+export function facetCounts(): { all: number; free: number; fall: number } {
+  const one = (sql: string) => (getDb().prepare(sql).get() as { c: number }).c;
+  return {
+    all: one("SELECT COUNT(*) c FROM listings WHERE status = 'available'"),
+    free: one("SELECT COUNT(*) c FROM listings WHERE status = 'available' AND price_cents = 0"),
+    fall: one("SELECT COUNT(*) c FROM listings WHERE status = 'available' AND handoff = 'fall'"),
+  };
+}

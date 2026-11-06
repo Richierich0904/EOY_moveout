@@ -14,7 +14,7 @@ export default async function WantedPage({ searchParams }: { searchParams: Promi
       </PageIntro>
       <form action="/wanted" role="search" className="reveal mx-auto w-full max-w-md">
         <label htmlFor="wanted-q" className="sr-only">Search wanted posts</label>
-        <input id="wanted-q" name="q" defaultValue={q} placeholder="Search wanted posts…" className="input rounded-full" />
+        <input id="wanted-q" name="q" defaultValue={q} placeholder="Search wanted posts…" className="input" />
       </form>
       {wants.length === 0 ? (
         <p className="card p-10 text-center text-muted">No wanted posts{q ? ` for “${q}”` : ""} yet.</p>

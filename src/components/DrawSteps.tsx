@@ -27,17 +27,17 @@ export function DrawSteps({ perTicket }: { perTicket: number }) {
   const s = STEPS[i];
   return (
     <div ref={ref} className="grid gap-6" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
-      <div role="tablist" aria-label="How the draw works" className="mx-auto flex max-w-full gap-1 overflow-x-auto rounded-full bg-fg/[.06] p-1 [scrollbar-width:none]">
+      <div role="tablist" aria-label="How the draw works" className="mx-auto flex max-w-full gap-1 overflow-x-auto border border-line p-1 [scrollbar-width:none]">
         {STEPS.map((x, k) => (
           <button key={x.t} role="tab" type="button" aria-selected={k === i} onClick={() => setI(k)}
-            className={`relative overflow-hidden whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-medium transition-[background-color,box-shadow] duration-300 ${k === i ? "bg-card shadow-[0_1px_3px_rgba(44,38,35,.12)]" : "text-muted hover:text-fg"}`}>
+            className={`relative overflow-hidden whitespace-nowrap px-4 py-2 text-[14px] font-medium transition-[background-color,box-shadow] duration-300 ${k === i ? "bg-fg text-bg" : "text-muted hover:text-fg"}`}>
             {k + 1}. {x.t}
             {k === i && !paused && inView && <span key={i} aria-hidden className="absolute bottom-0 left-0 h-[2px] w-full origin-left animate-[grow_6s_linear_forwards] bg-accent" />}
           </button>
         ))}
       </div>
       <div className="card grid items-center gap-6 overflow-hidden p-6 sm:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] sm:p-8">
-        <div className="flex aspect-[5/4] items-center justify-center rounded-[10px] bg-bg">
+        <div className="flex aspect-[5/4] items-center justify-center rounded-none bg-bg">
           <span key={i} className="display animate-[rise_.7s_cubic-bezier(.16,1,.3,1)_both] text-[clamp(4rem,10vw,7rem)] leading-none text-accent">
             {i === 0 ? "Free" : i === 1 ? "✓" : `1/${perTicket}`.replace("1/", `${perTicket}→1`)}
           </span>
