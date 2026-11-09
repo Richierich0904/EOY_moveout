@@ -24,6 +24,7 @@ It is built for a school, which means it is built for minors. Only verified stud
 | Feature | How it works |
 |---|---|
 | **Rules and a not-allowed list** (`/rules`) | Students agree to them at sign-up. Posts that mention a not-allowed word (`BANNED_WORDS`) are held until an organiser approves them. |
+| **AI safety judge** (optional) | With `ANTHROPIC_API_KEY` set, every listing, wanted post and photo is checked by a Claude model (`claude-haiku-5-5` by default) against the school's rules before it goes live. It catches what a word list can't: slang, misspellings, photos. It only advises. Anything it flags is held for an organiser, with its reason. It is never sent names, emails or messages. If the AI service is down, posts go by the word list and the failure shows on the organiser page. `npm run judge:test` runs it on sample posts. |
 | **Report** | On every listing, wanted post, chat and profile. Reports go to the organisers' queue. The other person isn't told who reported them. |
 | **Block** | A blocked student can't message you, and you stop seeing each other's posts. |
 | **Organisers** (`/admin`) | Emails in `ADMIN_EMAILS`. They work through reports, approve or reject held posts, remove listings, pause accounts, and can read any conversation. Students are told so in every chat, and every organiser action is written to a log. |
@@ -75,7 +76,8 @@ The school name, email domain, student address shape and time zone are already s
 6. `HANDOFF_SPOTS`: public places on campus. Never dorm rooms.
 7. `DATA_DIR`: a persistent folder, backed up.
 8. Serve it over HTTPS, and leave `DEMO_MODE` unset.
-9. Have the school read `/rules`, `/help` and `/privacy` and adjust the wording in `src/app/{rules,help,privacy}/page.tsx` to match school policy.
+9. If you want the AI safety judge: get the school's approval for sending post text and photos to an AI provider, agree the provider's data terms, then set `ANTHROPIC_API_KEY`. Run `npm run judge:test` and tune the rules prompt in `src/lib/judge.ts` if it disagrees with you.
+10. Have the school read `/rules`, `/help` and `/privacy` and adjust the wording in `src/app/{rules,help,privacy}/page.tsx` to match school policy.
 
 ## Deploy
 
@@ -104,12 +106,15 @@ src/lib/social.ts       wanted posts, messaging, notifications, alert fan-out
 src/lib/game.ts         credits ledger, draw entries and draws, dorm cup
 src/lib/progress.ts     points, rankings, shared prizes, streaks, badges
 src/lib/moderation.ts   reports, blocks, held posts, paused accounts, organiser log
+src/lib/judge.ts        the AI safety judge: the rules prompt, the call, and its record
+src/lib/rules.ts        the rules list, shared by the /rules page and the AI judge
 src/lib/upload.ts       photo cleaning and storage
 src/lib/housekeeping.ts periodic chores: settle rankings, run due draws, clear old sessions
 src/actions/*.ts        server actions (all writes go through here)
 src/app/**              pages
 src/components/**       UI
 scripts/seed.ts         demo data
+scripts/judge-samples.ts  sample posts for measuring the AI judge
 ```
 
 ## Checks

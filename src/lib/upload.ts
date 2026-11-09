@@ -39,6 +39,17 @@ export async function saveImages(files: File[]): Promise<string[]> {
   return out;
 }
 
+/** Small copies of stored photos for the AI judge, as base64 WebP. Smaller pictures are quicker and cheaper to check. */
+export async function judgeCopies(files: string[]): Promise<string[]> {
+  const out: string[] = [];
+  for (const f of files) {
+    if (!/^[\w.-]+$/.test(f) || f.endsWith(".svg")) continue;
+    const small = await sharp(path.join(UPLOAD_DIR, f)).resize({ width: 768, height: 768, fit: "inside", withoutEnlargement: true }).webp({ quality: 75 }).toBuffer();
+    out.push(small.toString("base64"));
+  }
+  return out;
+}
+
 /** Remove stored photos from disk. Missing files are ignored. */
 export async function deleteImages(files: (string | null | undefined)[]) {
   for (const f of files) {

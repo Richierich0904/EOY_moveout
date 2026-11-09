@@ -6,6 +6,7 @@ import { searchListings } from "@/lib/listings";
 import { categoryLabel } from "@/lib/config";
 import { money, timeAgo } from "@/lib/format";
 import { REPORT_REASONS, isBlocked } from "@/lib/moderation";
+import { describeHold } from "@/lib/judge";
 import { Who } from "@/components/Avatar";
 import { MessageForm } from "@/components/MessageForm";
 import { ListingCard } from "@/components/ListingCard";
@@ -32,7 +33,7 @@ export default async function WantPage({ params }: { params: Promise<{ id: strin
         <p className="eyebrow">Wanted · {categoryLabel(w.category)}{w.status === "fulfilled" ? " · Found" : ""}</p>
         <h1 className="text-[clamp(2.2rem,5vw,3.4rem)]">{w.title}</h1>
         <p className="display text-[22px] text-muted">{w.max_price_cents !== null ? `Will pay up to ${money(w.max_price_cents)}` : "Open to any price"}</p>
-        {w.status === "review" && <p className="border border-fg p-3.5 text-[13.5px]"><b className="font-semibold">Waiting for a quick check.</b> This post mentions something that might not be allowed, so an organiser will look at it before it goes on the board. See the <Link href="/rules" className="a-link">rules</Link>.</p>}
+        {w.status === "review" && <p className="border border-fg p-3.5 text-[13.5px]"><b className="font-semibold">Waiting for a quick check.</b> An organiser will look at this post before it goes on the board.{describeHold(w.held_reason).student ? ` It may include ${describeHold(w.held_reason).student}.` : " It mentions something that might not be allowed."} See the <Link href="/rules" className="a-link">rules</Link>.</p>}
         {w.status === "removed" && <p className="border border-fg p-3.5 text-[13.5px]"><b className="font-semibold">Removed by an organiser.</b> {w.removed_reason ? `Reason: ${w.removed_reason}. ` : ""}See the <Link href="/rules" className="a-link">rules</Link>.</p>}
         {w.description && <p className="max-w-[34em] whitespace-pre-wrap break-words text-[17px] leading-relaxed">{w.description}</p>}
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">

@@ -55,7 +55,7 @@ export async function deleteAccount(_prev: FormState, fd: FormData): Promise<For
     db.prepare("UPDATE prizes SET winner_id = NULL WHERE winner_id = ?").run(user.id);
     db.prepare("DELETE FROM users WHERE id = ?").run(user.id);
   })();
-  await deleteImages([...photos, user.avatar]);
+  await deleteImages([...photos, user.avatar, user.avatar_pending]);
   await destroySession();
   revalidatePath("/", "layout");
   redirect("/?deleted=1");

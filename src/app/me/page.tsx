@@ -76,7 +76,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       <header className="rise grid gap-6">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="grid gap-4">
-            <AvatarForm name={user.name} avatar={user.avatar} />
+            <AvatarForm name={user.name} avatar={user.avatar} pending={!!user.avatar_pending} />
             <div className="grid gap-2">
               <p className="eyebrow">{user.house} · {classLabel(user.grad_year)}</p>
               <h1 className="text-[clamp(2.4rem,5vw,3.6rem)]">{user.name}</h1>

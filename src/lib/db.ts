@@ -165,6 +165,18 @@ CREATE TABLE IF NOT EXISTS blocks (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (blocker_id, blocked_id)
 );
+CREATE TABLE IF NOT EXISTS judge_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL,
+  target_id INTEGER NOT NULL,
+  decision TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'none',
+  reason TEXT NOT NULL DEFAULT '',
+  model TEXT NOT NULL DEFAULT '',
+  ms INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_judge_log_created ON judge_log(created_at);
 CREATE TABLE IF NOT EXISTS admin_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -199,6 +211,11 @@ const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   // boosts and fair play
   ["listings", "boosted_until", "TEXT"],
   ["listings", "counted", "INTEGER NOT NULL DEFAULT 1"],
+  // why a post or photo is being held for an organiser (word list or AI judge)
+  ["listings", "held_reason", "TEXT"],
+  ["wants", "held_reason", "TEXT"],
+  ["users", "avatar_pending", "TEXT"],
+  ["users", "avatar_held_reason", "TEXT"],
 ];
 
 declare global {

@@ -4,6 +4,7 @@ import { getDb } from "./db";
 import { ADMIN_EMAILS, BANNED_WORDS } from "./config";
 import { likePattern } from "./listings";
 import { notify } from "./social";
+import { describeHold } from "./judge";
 
 export const REPORT_REASONS = [
   "Not allowed at school",
@@ -116,17 +117,33 @@ export function openReportCount() {
 
 // ---------- held posts and paused accounts ----------
 
-export type Held = { type: "listing" | "want"; id: number; title: string; description: string; owner_id: number; owner_name: string; created_at: string; word: string | null };
+export type Held = {
+  type: "listing" | "want" | "avatar"; id: number; title: string; description: string; owner_id: number; owner_name: string; created_at: string;
+  /** "Word list" or "AI judge", and what it noticed. */
+  by: string; why: string;
+  /** Photos an organiser should see before deciding. */
+  photos: string[];
+};
 
 export function heldPosts(): Held[] {
   const db = getDb();
-  const l = db.prepare("SELECT 'listing' AS type, l.id, l.title, l.description, u.id AS owner_id, u.name AS owner_name, l.created_at FROM listings l JOIN users u ON u.id = l.user_id WHERE l.status = 'review' ORDER BY l.id").all() as Omit<Held, "word">[];
-  const w = db.prepare("SELECT 'want' AS type, w.id, w.title, w.description, u.id AS owner_id, u.name AS owner_name, w.created_at FROM wants w JOIN users u ON u.id = w.user_id WHERE w.status = 'review' ORDER BY w.id").all() as Omit<Held, "word">[];
-  return [...l, ...w].map((h) => ({ ...h, word: screenText(h.title, h.description) }));
+  type Row = Omit<Held, "by" | "why" | "photos"> & { held_reason: string | null };
+  const l = db.prepare("SELECT 'listing' AS type, l.id, l.title, l.description, u.id AS owner_id, u.name AS owner_name, l.created_at, l.held_reason FROM listings l JOIN users u ON u.id = l.user_id WHERE l.status = 'review' ORDER BY l.id").all() as Row[];
+  const w = db.prepare("SELECT 'want' AS type, w.id, w.title, w.description, u.id AS owner_id, u.name AS owner_name, w.created_at, w.held_reason FROM wants w JOIN users u ON u.id = w.user_id WHERE w.status = 'review' ORDER BY w.id").all() as Row[];
+  const a = db.prepare("SELECT 'avatar' AS type, id, 'New profile photo' AS title, '' AS description, id AS owner_id, name AS owner_name, created_at, avatar_held_reason AS held_reason, avatar_pending FROM users WHERE avatar_pending IS NOT NULL ORDER BY id").all() as (Row & { avatar_pending: string })[];
+  const photosOf = db.prepare("SELECT file FROM listing_images WHERE listing_id = ? ORDER BY position");
+  return [...l, ...w, ...a].map((h) => {
+    // Posts held before reasons were stored fall back to looking the word up again.
+    const word = h.held_reason ? null : screenText(h.title, h.description);
+    const hold = describeHold(h.held_reason ?? (word ? `words|${word}` : null));
+    const photos = h.type === "listing" ? (photosOf.all(h.id) as { file: string }[]).map((r) => r.file)
+      : h.type === "avatar" ? [(h as Row & { avatar_pending: string }).avatar_pending] : [];
+    return { type: h.type, id: h.id, title: h.title, description: h.description, owner_id: h.owner_id, owner_name: h.owner_name, created_at: h.created_at, by: hold.by, why: hold.organiser, photos };
+  });
 }
 
 export function heldCount() {
-  return (getDb().prepare("SELECT (SELECT COUNT(*) FROM listings WHERE status = 'review') + (SELECT COUNT(*) FROM wants WHERE status = 'review') AS c").get() as { c: number }).c;
+  return (getDb().prepare("SELECT (SELECT COUNT(*) FROM listings WHERE status = 'review') + (SELECT COUNT(*) FROM wants WHERE status = 'review') + (SELECT COUNT(*) FROM users WHERE avatar_pending IS NOT NULL) AS c").get() as { c: number }).c;
 }
 
 export function suspendedUsers() {

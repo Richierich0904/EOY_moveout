@@ -144,7 +144,7 @@ export async function reviewHeld(fd: FormData) {
   if (type === "listing") {
     const l = db.prepare("SELECT user_id, title FROM listings WHERE id = ? AND status = 'review'").get(id) as { user_id: number; title: string } | undefined;
     if (l && approve) {
-      db.prepare("UPDATE listings SET status = 'available', created_at = datetime('now') WHERE id = ?").run(id);
+      db.prepare("UPDATE listings SET status = 'available', held_reason = NULL, created_at = datetime('now') WHERE id = ?").run(id);
       fanOutNewListing(id);
       notify(l.user_id, "Your listing is live", `An organiser checked "${l.title}" and it's on the shelves now.`, `/listings/${id}`);
       logAdmin(admin, "Approved a held listing", l.title);
@@ -152,12 +152,25 @@ export async function reviewHeld(fd: FormData) {
   } else if (type === "want") {
     const w = db.prepare("SELECT user_id, title FROM wants WHERE id = ? AND status = 'review'").get(id) as { user_id: number; title: string } | undefined;
     if (w && approve) {
-      db.prepare("UPDATE wants SET status = 'open' WHERE id = ?").run(id);
+      db.prepare("UPDATE wants SET status = 'open', held_reason = NULL WHERE id = ?").run(id);
       notify(w.user_id, "Your wanted post is live", `An organiser checked "${w.title}" and it's on the board now.`, `/wanted/${id}`);
       logAdmin(admin, "Approved a held wanted post", w.title);
     } else if (w) { removeWant(id, "Not allowed on the site"); logAdmin(admin, "Rejected a held wanted post", w.title); }
+  } else if (type === "avatar") {
+    const u = db.prepare("SELECT name, avatar, avatar_pending FROM users WHERE id = ? AND avatar_pending IS NOT NULL").get(id) as { name: string; avatar: string | null; avatar_pending: string } | undefined;
+    if (u && approve) {
+      db.prepare("UPDATE users SET avatar = avatar_pending, avatar_pending = NULL, avatar_held_reason = NULL WHERE id = ?").run(id);
+      await deleteImages([u.avatar]);
+      notify(id, "Your new profile photo is live", "An organiser checked it and it's on your profile now.", "/me");
+      logAdmin(admin, "Approved a held profile photo", u.name);
+    } else if (u) {
+      db.prepare("UPDATE users SET avatar_pending = NULL, avatar_held_reason = NULL WHERE id = ?").run(id);
+      await deleteImages([u.avatar_pending]);
+      notify(id, "Your new profile photo wasn't approved", "An organiser looked at it and it isn't right for the site. Please pick a different one. See the rules.", "/rules");
+      logAdmin(admin, "Rejected a held profile photo", u.name);
+    }
   }
-  revalidatePath("/admin/reports"); revalidatePath("/"); revalidatePath("/wanted");
+  revalidatePath("/admin/reports"); revalidatePath("/"); revalidatePath("/wanted"); revalidatePath("/", "layout");
 }
 
 /** Take down any listing straight from its page. */

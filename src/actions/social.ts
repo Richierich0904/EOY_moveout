@@ -9,6 +9,8 @@ import { dollarsToCents } from "@/lib/format";
 import { getOrCreateThread, getThread, notify, threadExists } from "@/lib/social";
 import { isBlocked, notifyAdmins, screenText } from "@/lib/moderation";
 import { hits, record } from "@/lib/limits";
+import { describeHold, holdForVerdict, holdForWord, judge, judgeOn, logJudge } from "@/lib/judge";
+import { categoryLabel } from "@/lib/config";
 import type { FormState } from "./auth";
 
 function str(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
@@ -29,10 +31,15 @@ export async function createWant(_prev: FormState, fd: FormData): Promise<FormSt
   const db = getDb();
   const today = (db.prepare("SELECT COUNT(*) c FROM wants WHERE user_id = ? AND created_at > datetime('now', '-1 day')").get(user.id) as { c: number }).c;
   if (today >= 10) return { error: "That's 10 wanted posts in a day. Come back tomorrow for more." };
-  const held = !!screenText(title, description);
-  const r = db.prepare("INSERT INTO wants (user_id, title, description, category, max_price_cents, status) VALUES (?, ?, ?, ?, ?, ?)")
-    .run(user.id, title, description, category, max, held ? "review" : "open");
-  if (held) notifyAdmins("A wanted post is waiting for review", `"${title}" mentions something that may not be allowed.`, "/admin/reports");
+  // The instant word list first, then the AI judge for anything the list can't catch.
+  const word = screenText(title, description);
+  const judged = !word && judgeOn();
+  const verdict = judged ? await judge({ kind: "want", title, description, category: categoryLabel(category), maxPriceCents: max }) : null;
+  const held = word ? holdForWord(word) : verdict?.decision === "review" ? holdForVerdict(verdict) : null;
+  const r = db.prepare("INSERT INTO wants (user_id, title, description, category, max_price_cents, status, held_reason) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .run(user.id, title, description, category, max, held ? "review" : "open", held);
+  if (judged) logJudge("want", Number(r.lastInsertRowid), verdict);
+  if (held) notifyAdmins("A wanted post is waiting for review", `"${title}" was held by the ${describeHold(held).by.toLowerCase()}.`, "/admin/reports");
   revalidatePath("/wanted");
   redirect(`/wanted/${Number(r.lastInsertRowid)}`);
 }

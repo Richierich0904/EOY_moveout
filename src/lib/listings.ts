@@ -22,6 +22,8 @@ export type Listing = {
   counted: number;
   boosted_until: string | null;
   removed_reason: string | null;
+  /** Why it is waiting for an organiser: the word list or the AI judge. See describeHold. */
+  held_reason: string | null;
   // joined
   seller_name: string;
   seller_house: string;

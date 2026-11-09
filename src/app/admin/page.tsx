@@ -4,6 +4,7 @@ import { currentDraw, entrants, pastDraws, prizesFor } from "@/lib/game";
 import { getDb } from "@/lib/db";
 import { runDrawNow } from "@/actions/game";
 import { heldCount, openReportCount, recentLog } from "@/lib/moderation";
+import { judgeStats } from "@/lib/judge";
 import { SCHOOL_TZ } from "@/lib/config";
 import { fmtDateTime, toSchoolLocal } from "@/lib/time";
 import { timeAgo } from "@/lib/format";
@@ -21,6 +22,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const stats = getDb().prepare("SELECT (SELECT COUNT(*) FROM users WHERE verified=1) users, (SELECT COUNT(*) FROM listings WHERE status='available') live, (SELECT COUNT(*) FROM listings WHERE status='sold') gone, (SELECT COALESCE(SUM(delta),0) FROM credit_transactions WHERE delta>0) issued").get() as { users: number; live: number; gone: number; issued: number };
   const reports = openReportCount(), held = heldCount();
   const log = recentLog(20);
+  const ai = judgeStats(7);
 
   return (
     <div className="grid max-w-3xl gap-8">
@@ -42,6 +44,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[["Students", stats.users], ["Live listings", stats.live], ["Rehomed", stats.gone], ["Credits issued", stats.issued / 100]].map(([k, v]) => <div key={String(k)} className="card grid gap-0.5 p-4"><div className="display text-[28px] leading-none tabular-nums">{v}</div><div className="text-[13px] text-muted">{k}</div></div>)}
       </div>
+
+      <section className="card grid gap-2 p-5 sm:p-7" data-judge>
+        <h2>AI safety judge</h2>
+        {ai.on ? (
+          <>
+            <p className="text-[15px]">In the last 7 days it checked <b className="font-semibold">{ai.checked}</b> post{ai.checked === 1 ? "" : "s"} and photo{ai.checked === 1 ? "" : "s"}, and held <b className="font-semibold">{ai.held}</b> for you to look at.{ai.checked > 0 ? ` A check takes about ${(ai.avg_ms / 1000).toFixed(1)} seconds.` : ""}</p>
+            {ai.unavailable > 0 && <p className="border border-fg p-3 text-[13.5px]"><b className="font-semibold">{ai.unavailable} check{ai.unavailable === 1 ? "" : "s"} could not be done</b> because the AI service did not answer. Those posts went by the word list alone. If this keeps happening, check the API key and the server log.</p>}
+            <p className="text-[13px] text-muted">It reads listings, wanted posts and photos before they go live, using {ai.model}. It never sees names, emails or messages, and it only advises: anything it holds waits in <Link href="/admin/reports" className="a-link">Reports and review</Link> for your decision.</p>
+          </>
+        ) : <p className="text-[15px] text-muted">Off. Posts are checked by the banned-word list only. Set <code>ANTHROPIC_API_KEY</code> on the server to turn the AI judge on.</p>}
+      </section>
 
       <section className="card grid gap-2 p-5 sm:p-7">
         <h2>Current draw</h2>

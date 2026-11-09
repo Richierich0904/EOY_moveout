@@ -18,7 +18,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="grid max-w-3xl gap-10">
-      <PageIntro eyebrow="Organisers" title="Reports and review" sub="Reports from students, posts held because they mention something not allowed, and paused accounts.">
+      <PageIntro eyebrow="Organisers" title="Reports and review" sub="Reports from students, posts and photos held by the word list or the AI judge, and paused accounts. The AI only advises. You decide.">
         <Link href="/admin" className="btn-ghost">Back to organisers</Link>
         <Link href="/admin/messages" className="btn-ghost">Read conversations</Link>
       </PageIntro>
@@ -46,16 +46,23 @@ export default async function ReportsPage() {
 
       <section className="grid gap-4">
         <h2>Held for review<span className="count ml-1">({held.length})</span></h2>
-        {held.length === 0 ? <p className="card p-6 text-muted">No posts are being held.</p> : (
+        {held.length === 0 ? <p className="card p-6 text-muted">Nothing is being held.</p> : (
           <ul className="grid gap-4">
             {held.map((h) => (
-              <li key={h.type + h.id} className="card grid gap-3 p-5" data-held>
+              <li key={h.type + h.id} className="card grid gap-3 p-5" data-held={h.type}>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link href={h.type === "listing" ? `/listings/${h.id}` : `/wanted/${h.id}`} className="a-link font-semibold">{h.type === "listing" ? "Listing" : "Wanted post"}: {h.title}</Link>
-                  <span className="text-[12px] text-muted">by {h.owner_name} · {timeAgo(h.created_at)}</span>
+                  {h.type === "avatar"
+                    ? <Link href={`/u/${h.owner_id}`} className="a-link font-semibold">New profile photo for {h.owner_name}</Link>
+                    : <Link href={h.type === "listing" ? `/listings/${h.id}` : `/wanted/${h.id}`} className="a-link font-semibold">{h.type === "listing" ? "Listing" : "Wanted post"}: {h.title}</Link>}
+                  <span className="text-[12px] text-muted">{h.type === "avatar" ? "" : `by ${h.owner_name} · `}{timeAgo(h.created_at)}</span>
                 </div>
                 {h.description && <p className="whitespace-pre-wrap break-words text-[13.5px] text-muted">{h.description}</p>}
-                {h.word && <p className="text-[13px]">Held because it mentions <b className="font-semibold">“{h.word}”</b>.</p>}
+                {h.photos.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {h.photos.map((f) => <img key={f} src={`/uploads/${f}`} alt={h.type === "avatar" ? "The new profile photo" : "A photo from the post"} className="h-28 w-28 border border-line object-cover" />)}
+                  </div>
+                )}
+                <p className="text-[13px]" data-held-why><b className="font-semibold">Held by the {h.by.toLowerCase()}.</b> {h.why}</p>
                 <div className="flex flex-wrap gap-2">
                   <form action={reviewHeld}><input type="hidden" name="type" value={h.type} /><input type="hidden" name="id" value={h.id} /><input type="hidden" name="decision" value="approve" /><button data-decision="approve" className="btn-primary">It&apos;s fine, publish it</button></form>
                   <form action={reviewHeld}><input type="hidden" name="type" value={h.type} /><input type="hidden" name="id" value={h.id} /><input type="hidden" name="decision" value="reject" /><button data-decision="reject" className="btn-ghost">Not allowed, remove it</button></form>

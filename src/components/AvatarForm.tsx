@@ -5,7 +5,7 @@ import { removeAvatar, updateAvatar } from "@/actions/profile";
 import { Face } from "./Avatar";
 
 /** Profile photo with a "Change photo" control. Picking a file uploads it straight away. */
-export function AvatarForm({ name, avatar }: { name: string; avatar: string | null }) {
+export function AvatarForm({ name, avatar, pending: waiting }: { name: string; avatar: string | null; pending: boolean }) {
   const [state, action, pending] = useActionState(updateAvatar, undefined);
   const form = useRef<HTMLFormElement>(null);
   return (
@@ -22,6 +22,7 @@ export function AvatarForm({ name, avatar }: { name: string; avatar: string | nu
         </form>
         {avatar && <form action={removeAvatar}><button className="text-[11.5px] text-muted underline-offset-2 hover:text-fg hover:underline">Remove photo</button></form>}
         {state?.error && <p role="alert" className="text-[12px] text-fg">{state.error}</p>}
+        {(state?.message || waiting) && <p role="status" data-avatar-pending className="max-w-[22em] text-[12px] text-muted">{state?.message ?? "Your new photo is waiting for a quick check by an organiser."}</p>}
       </div>
     </div>
   );

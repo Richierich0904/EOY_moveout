@@ -16,6 +16,8 @@ export type User = {
   verified: number;
   created_at: string;
   avatar: string | null;
+  /** A new profile photo that is waiting for an organiser to look at it. */
+  avatar_pending: string | null;
   suspended_at: string | null;
   suspended_reason: string | null;
   rules_accepted_at: string | null;
@@ -84,7 +86,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   if (!token) return null;
   const row = getDb()
     .prepare(
-      `SELECT u.id, u.email, u.name, u.house, u.grad_year, u.verified, u.created_at, u.avatar,
+      `SELECT u.id, u.email, u.name, u.house, u.grad_year, u.verified, u.created_at, u.avatar, u.avatar_pending,
               u.suspended_at, u.suspended_reason, u.rules_accepted_at, u.hide_from_rankings
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = ? AND s.expires_at > datetime('now')`,

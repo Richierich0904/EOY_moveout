@@ -3,7 +3,7 @@ import { likePattern, listingMatchesSearch } from "./listings";
 
 export type Want = {
   id: number; user_id: number; title: string; description: string; category: string;
-  max_price_cents: number | null; status: "open" | "fulfilled" | "review" | "removed"; created_at: string; removed_reason: string | null;
+  max_price_cents: number | null; status: "open" | "fulfilled" | "review" | "removed"; created_at: string; removed_reason: string | null; held_reason: string | null;
   user_name: string; user_house: string; user_grad_year: number; user_avatar: string | null;
 };
 

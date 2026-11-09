@@ -4,11 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { CATEGORIES, CONDITIONS, HANDOFF, HANDOFF_SPOTS, LIMITS, MAX_PHOTOS, RATE } from "@/lib/config";
+import { CATEGORIES, CONDITIONS, HANDOFF, HANDOFF_SPOTS, LIMITS, MAX_PHOTOS, RATE, categoryLabel } from "@/lib/config";
 import { dollarsToCents } from "@/lib/format";
 import { deleteImages, saveImages } from "@/lib/upload";
 import { fanOutNewListing, notify } from "@/lib/social";
 import { isBlocked, notifyAdmins, screenText } from "@/lib/moderation";
+import { describeHold, holdForVerdict, holdForWord, judge, judgeOn, logJudge, type Verdict } from "@/lib/judge";
 import type { FormState } from "./auth";
 
 function str(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
@@ -34,21 +35,34 @@ function listedToday(userId: number) {
   return (getDb().prepare("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND created_at > datetime('now', '-1 day')").get(userId) as { c: number }).c;
 }
 
-/** Save a listing. Posts that mention something not allowed are held until an organiser has looked. */
-async function insertListing(userId: number, d: Draft): Promise<{ id: number; held: boolean }> {
-  const db = getDb();
+type Prepared = { d: Draft; files: string[]; held: string | null; verdict: Verdict | null; judged: boolean };
+
+/** Everything slow, done before anything is saved: store the photos, then run the two safety checks.
+ *  The banned-word list is instant and free, so it goes first. The AI judge only sees posts that pass it. */
+async function prepareListing(d: Draft): Promise<Prepared> {
   const files = await saveImages(d.images);
-  const held = !!screenText(d.title, d.description);
+  const word = screenText(d.title, d.description);
+  if (word) return { d, files, held: holdForWord(word), verdict: null, judged: false };
+  if (!judgeOn()) return { d, files, held: null, verdict: null, judged: false };
+  const verdict = await judge({ kind: "listing", title: d.title, description: d.description, category: categoryLabel(d.category), priceCents: d.price_cents, images: files });
+  return { d, files, held: verdict?.decision === "review" ? holdForVerdict(verdict) : null, verdict, judged: true };
+}
+
+/** Save a prepared listing. A held listing waits, off the shelves, until an organiser has looked. */
+function saveListing(userId: number, p: Prepared): { id: number; held: boolean } {
+  const db = getDb();
+  const { d } = p;
   const r = db.prepare(
-    `INSERT INTO listings (user_id, title, description, category, price_cents, condition, course_code, handoff, spot, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(userId, d.title, d.description, d.category, d.price_cents, d.condition, d.course_code, d.handoff, d.spot, held ? "review" : "available");
+    `INSERT INTO listings (user_id, title, description, category, price_cents, condition, course_code, handoff, spot, status, held_reason)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(userId, d.title, d.description, d.category, d.price_cents, d.condition, d.course_code, d.handoff, d.spot, p.held ? "review" : "available", p.held);
   const id = Number(r.lastInsertRowid);
   const ins = db.prepare("INSERT INTO listing_images (listing_id, file, position) VALUES (?, ?, ?)");
-  files.forEach((f, i) => ins.run(id, f, i));
-  if (held) notifyAdmins("A listing is waiting for review", `"${d.title}" mentions something that may not be allowed.`, "/admin/reports");
+  p.files.forEach((f, i) => ins.run(id, f, i));
+  if (p.judged) logJudge("listing", id, p.verdict);
+  if (p.held) notifyAdmins("A listing is waiting for review", `"${d.title}" was held by the ${describeHold(p.held).by.toLowerCase()}.`, "/admin/reports");
   else fanOutNewListing(id);
-  return { id, held };
+  return { id, held: !!p.held };
 }
 
 export async function createListing(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -69,7 +83,7 @@ export async function createListing(_prev: FormState, fd: FormData): Promise<For
   if (err) return { error: err };
   if (listedToday(user.id) >= RATE.listingsPerDay) return { error: `That's ${RATE.listingsPerDay} listings in a day. Come back tomorrow for more.` };
   let made;
-  try { made = await insertListing(user.id, d); } catch (e) { return { error: (e as Error).message }; }
+  try { made = saveListing(user.id, await prepareListing(d)); } catch (e) { return { error: (e as Error).message }; }
   revalidatePath("/");
   redirect(`/listings/${made.id}`);
 }
@@ -99,7 +113,14 @@ export async function createListingsBulk(_prev: FormState, fd: FormData): Promis
   if (drafts.length === 0) return { error: "Add at least one item." };
   for (const d of drafts) { const err = validate(d); if (err) return { error: `"${d.title}": ${err}` }; }
   if (listedToday(user.id) + drafts.length > RATE.listingsPerDay) return { error: `That would be more than ${RATE.listingsPerDay} listings in a day. Post fewer now and the rest tomorrow.` };
-  try { for (const d of drafts) await insertListing(user.id, d); } catch (e) { return { error: (e as Error).message }; }
+  // Check every item at the same time, then save them together, so ten items don't take ten times as long.
+  const prepared = await Promise.allSettled(drafts.map(prepareListing));
+  const failed = prepared.find((p): p is PromiseRejectedResult => p.status === "rejected");
+  if (failed) {
+    await deleteImages(prepared.flatMap((p) => (p.status === "fulfilled" ? p.value.files : [])));
+    return { error: (failed.reason as Error).message };
+  }
+  for (const p of prepared) if (p.status === "fulfilled") saveListing(user.id, p.value);
   revalidatePath("/");
   redirect("/me?listed=" + drafts.length);
 }

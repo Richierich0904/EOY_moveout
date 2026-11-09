@@ -19,6 +19,7 @@ import { removeListingNow, restoreListing } from "@/actions/moderation";
 import { activeBoost, creditBalance } from "@/lib/game";
 import { badgesFor, confirmedCount } from "@/lib/progress";
 import { REPORT_REASONS, isBlocked } from "@/lib/moderation";
+import { describeHold } from "@/lib/judge";
 import { Gallery } from "@/components/Gallery";
 
 export const metadata = { title: "Listing" };
@@ -70,7 +71,7 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
             </div>
           </div>
 
-          {l.status === "review" && <p className="border border-fg p-3.5 text-[13.5px]"><b className="font-semibold">Waiting for a quick check.</b> This listing mentions something that might not be allowed, so an organiser will look at it before it goes on the shelves. See the <Link href="/rules" className="a-link">rules</Link>.</p>}
+          {l.status === "review" && <p className="border border-fg p-3.5 text-[13.5px]"><b className="font-semibold">Waiting for a quick check.</b> An organiser will look at this listing before it goes on the shelves.{describeHold(l.held_reason).student ? ` It may include ${describeHold(l.held_reason).student}.` : " It mentions something that might not be allowed."} If that&apos;s a mistake, it will be published as soon as they&apos;ve looked. See the <Link href="/rules" className="a-link">rules</Link>.</p>}
           {l.status === "removed" && <p className="border border-fg p-3.5 text-[13.5px]"><b className="font-semibold">Removed by an organiser.</b> {l.removed_reason ? `Reason: ${l.removed_reason}. ` : ""}See the <Link href="/rules" className="a-link">rules</Link> for what can be listed.</p>}
 
           {l.description && <p className="max-w-[36em] whitespace-pre-wrap break-words text-[14px] leading-relaxed">{l.description}</p>}
