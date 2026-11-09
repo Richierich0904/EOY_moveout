@@ -122,6 +122,18 @@ CREATE TABLE IF NOT EXISTS credit_transactions (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_credit_user ON credit_transactions(user_id);
+CREATE TABLE IF NOT EXISTS awards (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  period TEXT NOT NULL,
+  period_key TEXT NOT NULL,
+  place INTEGER NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  points INTEGER NOT NULL,
+  credit_cents INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (period, period_key, place, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_awards_user ON awards(user_id);
 `;
 
 // Columns added after the first release. Each ALTER is skipped if the column already exists.
@@ -129,6 +141,7 @@ const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   ["listings", "accepts_credits", "INTEGER NOT NULL DEFAULT 0"],
   ["listings", "credit_paid_cents", "INTEGER NOT NULL DEFAULT 0"],
   ["listings", "received_at", "TEXT"],
+  ["users", "avatar", "TEXT"],
 ];
 
 declare global {
@@ -146,6 +159,8 @@ export function getDb(): Database.Database {
     const cols = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
     if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
   }
+  // Indexes on migrated columns can only be created once the columns exist.
+  db.exec("CREATE INDEX IF NOT EXISTS idx_listings_received ON listings(received_at)");
   global.__db = db;
   return db;
 }

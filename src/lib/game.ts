@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { getDb } from "./db";
-import { BADGES, GIVEAWAYS_PER_TICKET, HOUSES, categoryKg } from "./config";
+import { GIVEAWAYS_PER_TICKET, HOUSES, categoryKg } from "./config";
 import { notify } from "./social";
 
 // ---------- credits ----------
@@ -100,18 +100,6 @@ export function runDueDraws() {
 
 // ---------- badges & leaderboard ----------
 
-export function badgesFor(userId: number): (typeof BADGES)[number][] {
-  const db = getDb();
-  const n = (sql: string) => (db.prepare(sql).get(userId) as { c: number }).c;
-  const given = n(`SELECT COUNT(*) c FROM listings WHERE user_id = ? AND ${GIVEAWAY_WHERE}`);
-  const rehomed = n("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND status = 'sold'");
-  const books = n("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND status = 'sold' AND category = 'textbooks'");
-  const summer = n("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND status = 'sold' AND handoff = 'fall'");
-  const won = n("SELECT COUNT(*) c FROM prizes WHERE winner_id = ?");
-  const early = userId <= 50;
-  const have: Record<string, boolean> = { giver: given >= 1, generous: given >= 5, rehomer: rehomed >= 10, bookworm: books >= 3, summer: summer >= 1, lucky: won >= 1, early };
-  return BADGES.filter((b) => have[b.slug]);
-}
 
 export type HouseRow = { house: string; members: number; rehomed: number; given: number; kg: number; rank: number };
 

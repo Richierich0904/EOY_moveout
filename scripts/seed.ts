@@ -70,6 +70,16 @@ const listings: L[] = [
   [2, "US History textbook", "", "textbooks", 1800, "Good", "HIST 200", "now", "sold", 62],
   [3, "School blazer, size M", "", "clothing", 2500, "Good", null, "now", "sold", 70],
   [4, "Hockey skates, size 9", "", "sports", 3000, "Good", null, "now", "sold", 80],
+  // recent handoffs, so this week's and this month's rankings and the progress charts have data
+  [2, "Shower caddy", "", "dorm", 0, "Good", null, "now", "sold", 1],
+  [4, "Desk organiser", "", "dorm", 0, "Good", null, "now", "sold", 2],
+  [0, "Clip-on reading light", "", "dorm", 600, "Good", null, "now", "sold", 3],
+  [3, "Yoga mat", "", "sports", 0, "Fair", null, "now", "sold", 8],
+  [0, "French 2 workbook", "", "textbooks", 0, "Good", "FREN 200", "now", "sold", 9],
+  [2, "Throw pillow", "", "dorm", 300, "Good", null, "now", "sold", 10],
+  [4, "Laundry hamper", "", "dorm", 0, "Good", null, "now", "sold", 15],
+  [0, "Kettle", "", "electronics", 800, "Good", null, "now", "sold", 17],
+  [1, "Poster frames (3)", "", "dorm", 0, "Good", null, "now", "sold", 21],
 ];
 const insL = db.prepare(`INSERT INTO listings (user_id, title, description, category, price_cents, condition, course_code, handoff, status, created_at, closed_at)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', ?), CASE WHEN ? = 'sold' THEN datetime('now', ?) ELSE NULL END)`);

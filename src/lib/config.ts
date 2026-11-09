@@ -74,4 +74,19 @@ export const BADGES = [
   { slug: "summer", emoji: "🍂", label: "Summer saver", desc: "Handed something over across the summer" },
   { slug: "lucky", emoji: "🎟️", label: "Lucky", desc: "Won a draw" },
   { slug: "early", emoji: "🚀", label: "Early adopter", desc: "One of the first 50 members" },
+  { slug: "streak", emoji: "🔥", label: "On a roll", desc: "Rehomed something 3 weeks in a row" },
+  { slug: "weekly", emoji: "🏅", label: "Weekly champion", desc: "Finished a week at #1" },
+  { slug: "monthly", emoji: "🥇", label: "Monthly champion", desc: "Finished a month in the top 3" },
+  { slug: "yearly", emoji: "🏆", label: "Year champion", desc: "Finished a school year in the top 3" },
 ] as const;
+
+// Points for a handoff the other person confirmed. Giving something away is worth more than selling it.
+export const POINTS_GIVEAWAY = 3;
+export const POINTS_SALE = 2;
+
+// Credits paid automatically to the top finishers of each finished period (in cents; 100 = one credit).
+export const RANK_PRIZES: Record<"week" | "month" | "year", number[]> = {
+  week: [500],
+  month: [1500, 1000, 500],
+  year: [5000, 3000, 2000],
+};

@@ -4,7 +4,7 @@ import { listingMatchesSearch } from "./listings";
 export type Want = {
   id: number; user_id: number; title: string; description: string; category: string;
   max_price_cents: number | null; status: "open" | "fulfilled"; created_at: string;
-  user_name: string; user_house: string; user_grad_year: number;
+  user_name: string; user_house: string; user_grad_year: number; user_avatar: string | null;
 };
 
 export function listWants(opts: { userId?: number; status?: "open" | "all"; q?: string } = {}): Want[] {
@@ -13,14 +13,14 @@ export function listWants(opts: { userId?: number; status?: "open" | "all"; q?: 
   if (opts.userId) { where.push("w.user_id = ?"); params.push(opts.userId); }
   if (opts.q) { where.push("(w.title LIKE ? OR w.description LIKE ?)"); params.push(`%${opts.q}%`, `%${opts.q}%`); }
   return getDb().prepare(
-    `SELECT w.*, u.name AS user_name, u.house AS user_house, u.grad_year AS user_grad_year
+    `SELECT w.*, u.name AS user_name, u.house AS user_house, u.grad_year AS user_grad_year, u.avatar AS user_avatar
      FROM wants w JOIN users u ON u.id = w.user_id ${where.length ? "WHERE " + where.join(" AND ") : ""}
      ORDER BY w.created_at DESC LIMIT 200`).all(...params) as Want[];
 }
 
 export function getWant(id: number): Want | null {
   return (getDb().prepare(
-    `SELECT w.*, u.name AS user_name, u.house AS user_house, u.grad_year AS user_grad_year
+    `SELECT w.*, u.name AS user_name, u.house AS user_house, u.grad_year AS user_grad_year, u.avatar AS user_avatar
      FROM wants w JOIN users u ON u.id = w.user_id WHERE w.id = ?`).get(id) as Want | undefined) ?? null;
 }
 
@@ -79,12 +79,12 @@ export function fanOutNewListing(listingId: number) {
 
 export type Thread = {
   id: number; listing_id: number | null; want_id: number | null; user_a: number; user_b: number;
-  last_message_at: string; other_id: number; other_name: string; subject: string; last_body: string | null; unread: number;
+  last_message_at: string; other_id: number; other_name: string; other_avatar: string | null; subject: string; last_body: string | null; unread: number;
 };
 
 export function listThreads(userId: number): Thread[] {
   return getDb().prepare(
-    `SELECT t.*, o.id AS other_id, o.name AS other_name,
+    `SELECT t.*, o.id AS other_id, o.name AS other_name, o.avatar AS other_avatar,
        COALESCE(l.title, 'Wanted: ' || w.title, 'Conversation') AS subject,
        (SELECT body FROM messages m WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1) AS last_body,
        (SELECT COUNT(*) FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND m.sender_id != ?) AS unread
@@ -98,7 +98,7 @@ export function listThreads(userId: number): Thread[] {
 
 export function getThread(threadId: number, userId: number): Thread | null {
   return (getDb().prepare(
-    `SELECT t.*, o.id AS other_id, o.name AS other_name,
+    `SELECT t.*, o.id AS other_id, o.name AS other_name, o.avatar AS other_avatar,
        COALESCE(l.title, 'Wanted: ' || w.title, 'Conversation') AS subject, NULL AS last_body, 0 AS unread
      FROM threads t
      JOIN users o ON o.id = CASE WHEN t.user_a = ? THEN t.user_b ELSE t.user_a END

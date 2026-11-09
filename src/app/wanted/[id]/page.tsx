@@ -32,7 +32,7 @@ export default async function WantPage({ params }: { params: Promise<{ id: strin
         <p className="display text-[22px] text-muted">{w.max_price_cents !== null ? `Will pay up to ${money(w.max_price_cents)}` : "Open to any price"}</p>
         {w.description && <p className="max-w-[34em] whitespace-pre-wrap text-[17px] leading-relaxed">{w.description}</p>}
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
-          <Who id={w.user_id} name={w.user_name} house={w.user_house} gradYear={w.user_grad_year} />
+          <Who id={w.user_id} name={w.user_name} house={w.user_house} gradYear={w.user_grad_year} avatar={w.user_avatar} />
           <span className="text-[13.5px] text-muted">Posted {timeAgo(w.created_at)}</span>
         </div>
       </header>

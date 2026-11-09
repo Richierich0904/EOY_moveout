@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { unreadCounts } from "@/lib/social";
 import { creditBalance } from "@/lib/game";
 import { categoryShelves } from "@/lib/listings";
+import { settleRankings } from "@/lib/progress";
 
 export const metadata: Metadata = {
   title: { default: `${APP_NAME} · ${SCHOOL_NAME}`, template: `%s · ${APP_NAME}` },
@@ -21,6 +22,7 @@ export const viewport: Viewport = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  settleRankings();
   const user = await getCurrentUser();
   const counts = user ? unreadCounts(user.id) : { notifications: 0, messages: 0 };
   const categoryCounts = Object.fromEntries(categoryShelves().map((s) => [s.category, s.count]));
@@ -35,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" />
       </head>
       <body className="min-h-screen">
-        <Nav appName={APP_NAME} user={user ? { name: user.name, credits: creditBalance(user.id), isAdmin: user.is_admin } : null} counts={counts} categoryCounts={categoryCounts} />
+        <Nav appName={APP_NAME} user={user ? { name: user.name, credits: creditBalance(user.id), isAdmin: user.is_admin, avatar: user.avatar } : null} counts={counts} categoryCounts={categoryCounts} />
         <Motion />
         <main id="main" className={`mx-auto w-full max-w-[1280px] ${gutter} pb-20 pt-4 sm:pt-8`}>{children}</main>
         <footer className="border-t border-line">
@@ -54,6 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <h3 className="mb-1">Around {APP_NAME}</h3>
                 <Link href="/wanted" className={footLink}>Wanted board</Link>
                 <Link href="/lottery" className={footLink}>Giveaway draw</Link>
+                <Link href="/rankings" className={footLink}>Rankings &amp; prizes</Link>
                 <Link href="/impact" className={footLink}>Impact &amp; dorm cup</Link>
                 <Link href="/listings/new?mode=bulk" className={footLink}>Clear out your room</Link>
               </div>

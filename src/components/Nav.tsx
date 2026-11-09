@@ -5,7 +5,7 @@ import { CATEGORIES } from "@/lib/config";
 
 type Props = {
   appName: string;
-  user: { name: string; credits: number; isAdmin: boolean } | null;
+  user: { name: string; credits: number; isAdmin: boolean; avatar: string | null } | null;
   counts: { notifications: number; messages: number };
   categoryCounts: Record<string, number>;
 };
@@ -21,7 +21,7 @@ const textLink = "text-[12.5px] font-medium tracking-[.03em] transition hover:te
 export function Nav({ appName, user, counts, categoryCounts }: Props) {
   const first = user?.name.split(" ")[0];
   const sections = [
-    { href: "/", label: "Shop" }, { href: "/wanted", label: "Wanted" }, { href: "/lottery", label: "Giveaway draw" }, { href: "/impact", label: "Impact" },
+    { href: "/", label: "Shop" }, { href: "/wanted", label: "Wanted" }, { href: "/rankings", label: "Rankings" }, { href: "/lottery", label: "Giveaway draw" }, { href: "/impact", label: "Impact" },
     ...(user ? [{ href: "/messages", label: "Messages", count: counts.messages }, { href: "/alerts", label: "Alerts", count: counts.notifications }, { href: "/me", label: "My account" }] : [{ href: "/login", label: "Log in" }, { href: "/signup", label: "Join" }]),
     ...(user?.isAdmin ? [{ href: "/admin", label: "Organisers" }] : []),
   ];
@@ -37,6 +37,7 @@ export function Nav({ appName, user, counts, categoryCounts }: Props) {
           <nav aria-label="Sections" className="hidden items-center gap-6 md:flex">
             <Link href="/" className={textLink}>Home</Link>
             <Link href="/wanted" className={textLink}>Wanted</Link>
+            <Link href="/rankings" className={textLink}>Rankings</Link>
             <Link href="/lottery" className={textLink}>Draw</Link>
             <Link href="/impact" className={`${textLink} hidden lg:inline`}>Impact</Link>
           </nav>
@@ -56,7 +57,7 @@ export function Nav({ appName, user, counts, categoryCounts }: Props) {
                 <span className="flex h-7 w-7 items-center justify-center rounded-full ring-[1.5px] ring-white"><Icon name="plus" size={14} stroke={2.2} /></span>
               </Link>
               {user.credits > 0 && <Link href="/me" className="hidden h-9 items-center border border-line px-2.5 text-[11.5px] font-semibold tabular-nums transition hover:border-fg sm:flex" aria-label={`${user.credits / 100} credits`}>⭐ {user.credits / 100}</Link>}
-              <Link href="/me" aria-label="My account" className={round}><Icon name="user" size={16} /><span className="sr-only">{first}</span></Link>
+              <Link href="/me" aria-label="My account" className={user.avatar ? "relative h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-line transition hover:opacity-80" : round}>{user.avatar ? <img src={`/uploads/${user.avatar}`} alt="" className="h-full w-full object-cover" /> : <Icon name="user" size={16} />}<span className="sr-only">{first}</span></Link>
             </>
           ) : (
             <>

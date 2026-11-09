@@ -23,6 +23,7 @@ export type Listing = {
   seller_name: string;
   seller_house: string;
   seller_grad_year: number;
+  seller_avatar: string | null;
   image: string | null;
 };
 
@@ -41,7 +42,7 @@ export type ListingFilters = {
 };
 
 const BASE_SELECT = `
-  SELECT l.*, u.name AS seller_name, u.house AS seller_house, u.grad_year AS seller_grad_year,
+  SELECT l.*, u.name AS seller_name, u.house AS seller_house, u.grad_year AS seller_grad_year, u.avatar AS seller_avatar,
     (SELECT file FROM listing_images i WHERE i.listing_id = l.id ORDER BY position LIMIT 1) AS image
   FROM listings l JOIN users u ON u.id = l.user_id`;
 

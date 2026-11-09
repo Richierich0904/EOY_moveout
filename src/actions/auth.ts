@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { checkPassword, createSession, destroySession, emailAllowed, getCurrentUser, hashPassword, makeVerifyCode } from "@/lib/auth";
 import { ALLOWED_EMAIL_DOMAINS, HOUSES } from "@/lib/config";
 
-export type FormState = { error?: string } | undefined;
+export type FormState = { error?: string; ok?: boolean } | undefined;
 
 function str(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
 

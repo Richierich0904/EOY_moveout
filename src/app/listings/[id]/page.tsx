@@ -14,7 +14,8 @@ import { Shelves } from "@/components/Shelves";
 import { Who } from "@/components/Avatar";
 import { getDb } from "@/lib/db";
 import { confirmReceived } from "@/actions/game";
-import { badgesFor, creditBalance } from "@/lib/game";
+import { creditBalance } from "@/lib/game";
+import { badgesFor } from "@/lib/progress";
 import { Gallery } from "@/components/Gallery";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -102,7 +103,7 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
-            <Who id={l.user_id} name={l.seller_name} house={l.seller_house} gradYear={l.seller_grad_year} />
+            <Who id={l.user_id} name={l.seller_name} house={l.seller_house} gradYear={l.seller_grad_year} avatar={l.seller_avatar} />
             <span className="text-[11.5px] uppercase tracking-[.08em] text-muted">{rehomed} rehomed</span>
             <div className="w-full"><Badges list={badgesFor(l.user_id)} /></div>
           </div>

@@ -12,6 +12,7 @@ export type User = {
   grad_year: number;
   verified: number;
   created_at: string;
+  avatar: string | null;
   is_admin: boolean;
 };
 
@@ -64,7 +65,7 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!token) return null;
   const row = getDb()
     .prepare(
-      `SELECT u.id, u.email, u.name, u.house, u.grad_year, u.verified, u.created_at
+      `SELECT u.id, u.email, u.name, u.house, u.grad_year, u.verified, u.created_at, u.avatar
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = ? AND s.expires_at > datetime('now')`,
     )
