@@ -11,7 +11,7 @@ export const ALLOWED_EMAIL_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS ?? "")
   .map((d) => d.trim().toLowerCase())
   .filter(Boolean);
 
-export const HOUSES = (process.env.HOUSES ?? "North,South,East,West,Day Student")
+export const HOUSES = (process.env.HOUSES ?? "Main,Tippetts,Keil,Culberson,Fowle,South,Swank")
   .split(",")
   .map((h) => h.trim())
   .filter(Boolean);

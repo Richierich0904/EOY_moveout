@@ -54,9 +54,9 @@ function image(i: number) {
 
 const hash = bcrypt.hashSync("password123", 10);
 const users = [
-  ["maya@demo.school", "Maya Chen", "North", 2026], ["leo@demo.school", "Leo Okafor", "South", 2027],
-  ["sofia@demo.school", "Sofia Rossi", "East", 2026], ["jamal@demo.school", "Jamal Hart", "West", 2028],
-  ["aiko@demo.school", "Aiko Tanaka", "North", 2029],
+  ["maya@demo.school", "Maya Chen", "Tippetts", 2026], ["leo@demo.school", "Leo Okafor", "South", 2027],
+  ["sofia@demo.school", "Sofia Rossi", "Keil", 2026], ["jamal@demo.school", "Jamal Hart", "Fowle", 2028],
+  ["aiko@demo.school", "Aiko Tanaka", "Swank", 2029],
 ] as const;
 const ins = db.prepare("INSERT INTO users (email, name, house, grad_year, password_hash, verified) VALUES (?, ?, ?, ?, ?, 1)");
 const uid = users.map((u) => Number(ins.run(u[0], u[1], u[2], u[3], hash).lastInsertRowid));
