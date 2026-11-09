@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { UPLOAD_DIR } from "@/lib/db";
 
-const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", heic: "image/heic" };
+const MIME: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", heic: "image/heic", svg: "image/svg+xml" };
 
 export async function GET(_req: Request, { params }: { params: Promise<{ file: string }> }) {
   const { file } = await params;
@@ -10,7 +10,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
   try {
     const buf = await fs.readFile(path.join(UPLOAD_DIR, file));
     const ext = file.split(".").pop() ?? "";
-    return new Response(buf, { headers: { "Content-Type": MIME[ext] ?? "application/octet-stream", "Cache-Control": "public, max-age=31536000, immutable" } });
+    return new Response(buf, { headers: { "Content-Type": MIME[ext] ?? "application/octet-stream", "Cache-Control": "public, max-age=31536000, immutable", "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'", "X-Content-Type-Options": "nosniff" } });
   } catch {
     return new Response("Not found", { status: 404 });
   }

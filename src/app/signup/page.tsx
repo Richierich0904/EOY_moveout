@@ -10,7 +10,7 @@ export default async function SignupPage() {
   if (await getCurrentUser()) redirect("/");
   return (
     <div className="grid max-w-md gap-8">
-      <PageIntro eyebrow={`${SCHOOL_NAME} students only`} title={`Join ${APP_NAME}`} sub="Your real name and house show on your listings. That's what keeps it friendly." />
+      <PageIntro eyebrow={`${SCHOOL_NAME} students only`} title={`Join ${APP_NAME}`} sub="Your real name and dorm show on your listings. That's what keeps it friendly." />
       <div className="card p-6 sm:p-8"><SignupForm houses={HOUSES} domains={ALLOWED_EMAIL_DOMAINS} /></div>
     </div>
   );

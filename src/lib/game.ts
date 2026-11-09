@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { getDb } from "./db";
-import { BADGES, GIVEAWAYS_PER_TICKET, categoryKg } from "./config";
+import { BADGES, GIVEAWAYS_PER_TICKET, HOUSES, categoryKg } from "./config";
 import { notify } from "./social";
 
 // ---------- credits ----------
@@ -113,8 +113,9 @@ export function badgesFor(userId: number): (typeof BADGES)[number][] {
   return BADGES.filter((b) => have[b.slug]);
 }
 
-export type HouseRow = { house: string; members: number; rehomed: number; given: number; kg: number };
+export type HouseRow = { house: string; members: number; rehomed: number; given: number; kg: number; rank: number };
 
+/** Every dorm from the config, plus any other dorm a member still has on file. Tied dorms share a rank. */
 export function houseLeaderboard(): HouseRow[] {
   const rows = getDb().prepare(
     `SELECT u.house, COUNT(DISTINCT u.id) AS members,
@@ -123,8 +124,15 @@ export function houseLeaderboard(): HouseRow[] {
        GROUP_CONCAT(l.category) AS cats
      FROM users u LEFT JOIN listings l ON l.user_id = u.id AND l.status = 'sold'
      WHERE u.verified = 1 GROUP BY u.house`).all() as { house: string; members: number; rehomed: number; given: number; cats: string | null }[];
-  return rows.map((r) => ({
-    house: r.house, members: r.members, rehomed: r.rehomed, given: r.given ?? 0,
-    kg: (r.cats ?? "").split(",").filter(Boolean).reduce((a, c) => a + categoryKg(c), 0),
-  })).sort((a, b) => b.rehomed - a.rehomed || b.given - a.given);
+  const byHouse = new Map(rows.map((r) => [r.house, r]));
+  const names = [...HOUSES, ...rows.map((r) => r.house).filter((h) => !HOUSES.includes(h))];
+  const list = names.map((house) => {
+    const r = byHouse.get(house);
+    return {
+      house, members: r?.members ?? 0, rehomed: r?.rehomed ?? 0, given: r?.given ?? 0,
+      kg: (r?.cats ?? "").split(",").filter(Boolean).reduce((acc, c) => acc + categoryKg(c), 0), rank: 0,
+    };
+  }).sort((x, y) => y.rehomed - x.rehomed || y.given - x.given);
+  list.forEach((h) => { h.rank = 1 + list.filter((o) => o.rehomed > h.rehomed || (o.rehomed === h.rehomed && o.given > h.given)).length; });
+  return list;
 }

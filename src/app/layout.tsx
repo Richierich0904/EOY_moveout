@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <h3 className="mb-1">Around {APP_NAME}</h3>
                 <Link href="/wanted" className={footLink}>Wanted board</Link>
                 <Link href="/lottery" className={footLink}>Giveaway draw</Link>
-                <Link href="/impact" className={footLink}>Impact &amp; house cup</Link>
+                <Link href="/impact" className={footLink}>Impact &amp; dorm cup</Link>
                 <Link href="/listings/new?mode=bulk" className={footLink}>Clear out your room</Link>
               </div>
             </div>

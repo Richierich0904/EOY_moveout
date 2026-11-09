@@ -19,7 +19,7 @@ export async function signup(_prev: FormState, fd: FormData): Promise<FormState>
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
   if (!emailAllowed(email)) return { error: `Use your school email (${ALLOWED_EMAIL_DOMAINS.map((d) => "@" + d).join(" or ")}).` };
   if (name.length < 2) return { error: "Enter your name." };
-  if (!HOUSES.includes(house)) return { error: "Pick your house." };
+  if (!HOUSES.includes(house)) return { error: "Pick your dorm." };
   const y = new Date().getFullYear();
   if (!(gradYear >= y - 1 && gradYear <= y + 8)) return { error: "Enter a realistic graduation year." };
   if (password.length < 8) return { error: "Password needs at least 8 characters." };

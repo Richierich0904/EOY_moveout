@@ -14,7 +14,7 @@ export function AdminForms({ granted, hasDraw }: { granted: boolean; hasDraw: bo
         <h2>{hasDraw ? "Queue the next draw" : "Start a draw"}</h2>
         <form action={drawAction} className="grid gap-4">
           <div><label className="label" htmlFor="draw-title">Name</label><input id="draw-title" name="title" required placeholder="e.g. May move-out draw" className="input" /></div>
-          <div><label className="label" htmlFor="draw-desc">Blurb</label><input id="draw-desc" name="description" placeholder="Give away 3 things, get a ticket. Winners announced at house meeting." className="input" /></div>
+          <div><label className="label" htmlFor="draw-desc">Blurb</label><input id="draw-desc" name="description" placeholder="Give away 3 things, get a ticket. Winners announced at dorm meeting." className="input" /></div>
           <div><label className="label" htmlFor="draw-end">Ends</label><input id="draw-end" name="ends_at" type="datetime-local" required defaultValue={inTwoWeeks} className="input" /></div>
           <p className="label">Prizes <span className="font-normal text-muted">(credits are paid automatically; leave 0 for a physical prize)</span></p>
           {[0, 1, 2, 3, 4, 5].map((i) => (

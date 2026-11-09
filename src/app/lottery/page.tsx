@@ -65,7 +65,7 @@ export default async function LotteryPage() {
         </section>
       ) : (
         <section className="grid gap-6">
-          <PageIntro eyebrow="The giveaway draw" title="No draw running right now." sub="Giveaways still count for badges and the house cup." >
+          <PageIntro eyebrow="The giveaway draw" title="No draw running right now." sub="Giveaways still count for badges and the dorm cup." >
             {user?.is_admin && <Link href="/admin" className="btn-primary">Start a draw</Link>}
           </PageIntro>
         </section>

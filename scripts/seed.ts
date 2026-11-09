@@ -1,54 +1,36 @@
 // Demo data so the app isn't empty on first run.
-//   npm run seed          (adds demo users/listings; safe to re-run, it skips if demo users exist)
+//   npm run seed    adds demo students and listings (skips if they already exist)
+//   npm run reset   wipes the local database and photos, then adds fresh demo data
 // All demo accounts use the password: password123
 import path from "node:path";
 import fs from "node:fs";
-import zlib from "node:zlib";
 import bcrypt from "bcryptjs";
 import { getDb, UPLOAD_DIR } from "../src/lib/db";
 import { fanOutNewListing } from "../src/lib/social";
+import { demoArt } from "./demo-art";
+
+const DATA_DIR = process.env.DATA_DIR ?? path.join(process.cwd(), "data");
+if (process.argv.includes("--fresh")) {
+  // Local development only: never wipe a hosted database.
+  if (process.env.NODE_ENV === "production" || process.env.DATA_DIR) {
+    console.error("Refusing to reset: this looks like a hosted database (NODE_ENV=production or DATA_DIR is set).");
+    process.exit(1);
+  }
+  for (const f of ["app.db", "app.db-wal", "app.db-shm"]) fs.rmSync(path.join(DATA_DIR, f), { force: true });
+  fs.rmSync(UPLOAD_DIR, { recursive: true, force: true });
+  console.log("Cleared the local database and photos.");
+}
 
 const db = getDb();
 if (db.prepare("SELECT 1 FROM users WHERE email LIKE '%@demo.school'").get()) {
-  console.log("Demo data already present. Delete data/app.db to start fresh.");
+  console.log("Demo data is already here. Run `npm run reset` to start over with fresh demo data.");
   process.exit(0);
 }
 
-// --- tiny PNG writer so listings have cover images without shipping binary files ---
-function crc32(buf: Buffer) {
-  let c, crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) { c = (crc ^ buf[n]) & 0xff; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; crc = (crc >>> 8) ^ c; }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-function chunk(type: string, data: Buffer) {
-  const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
-  const td = Buffer.concat([Buffer.from(type), data]);
-  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
-  return Buffer.concat([len, td, crc]);
-}
-function png(w: number, h: number, color: [number, number, number], color2: [number, number, number]) {
-  const raw = Buffer.alloc((w * 3 + 1) * h);
-  for (let y = 0; y < h; y++) {
-    raw[y * (w * 3 + 1)] = 0;
-    for (let x = 0; x < w; x++) {
-      const t = (x + y) / (w + h);
-      const o = y * (w * 3 + 1) + 1 + x * 3;
-      raw[o] = Math.round(color[0] * (1 - t) + color2[0] * t);
-      raw[o + 1] = Math.round(color[1] * (1 - t) + color2[1] * t);
-      raw[o + 2] = Math.round(color[2] * (1 - t) + color2[2] * t);
-    }
-  }
-  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("IDAT", zlib.deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
-}
-const PALETTE: [number, number, number][][] = [
-  [[244, 211, 94], [224, 122, 95]], [[129, 178, 154], [61, 90, 128]], [[242, 204, 143], [224, 122, 95]], [[61, 90, 128], [152, 193, 217]],
-  [[214, 69, 69], [255, 176, 136]], [[31, 111, 74], [129, 178, 154]], [[120, 100, 160], [200, 180, 230]], [[80, 80, 80], [190, 190, 190]],
-];
-function image(i: number) {
-  const name = `demo-${i}.png`;
-  const [a, b] = PALETTE[i % PALETTE.length];
-  fs.writeFileSync(path.join(UPLOAD_DIR, name), png(600, 600, a, b));
+/** Write a drawn product shot for a demo listing, in the site's black-and-grey palette. */
+function image(i: number, title: string) {
+  const name = `demo-${i}.svg`;
+  fs.writeFileSync(path.join(UPLOAD_DIR, name), demoArt(title));
   return name;
 }
 
@@ -95,7 +77,7 @@ const insI = db.prepare("INSERT INTO listing_images (listing_id, file, position)
 listings.forEach((l, i) => {
   const ago = `-${l[9]} days`;
   const id = Number(insL.run(uid[l[0]], l[1], l[2], l[3], l[4], l[5], l[6], l[7], l[8], ago, l[8], ago).lastInsertRowid);
-  if (l[8] === "available") insI.run(id, image(i));
+  if (l[8] === "available") insI.run(id, image(i, l[1]));
 });
 
 const insW = db.prepare("INSERT INTO wants (user_id, title, description, category, max_price_cents) VALUES (?, ?, ?, ?, ?)");
@@ -114,7 +96,7 @@ soldRows.forEach((l, i) => {
 db.prepare("UPDATE listings SET price_cents = 0 WHERE status = 'sold' AND user_id = ?").run(uid[1]); // Leo gave everything away
 db.prepare("UPDATE listings SET price_cents = 0 WHERE id = (SELECT MIN(id) FROM listings WHERE status = 'sold' AND user_id = ?)").run(uid[3]);
 const draw = db.prepare("INSERT INTO draws (title, description, starts_at, ends_at) VALUES (?, ?, datetime('now','-90 days'), datetime('now','+14 days'))")
-  .run("Autumn giveaway draw", "Every 3 items you give away earns a ticket. Drawn at the last house meeting of term.");
+  .run("Autumn giveaway draw", "Every 3 items you give away earns a ticket. Drawn at the last dorm meeting of term.");
 const insP = db.prepare("INSERT INTO prizes (draw_id, title, credit_cents, position) VALUES (?, ?, ?, ?)");
 insP.run(draw.lastInsertRowid, "$25 school store voucher", 0, 0);
 insP.run(draw.lastInsertRowid, "20 credits to spend on the app", 2000, 1);

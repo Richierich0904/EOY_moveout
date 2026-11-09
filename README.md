@@ -33,6 +33,7 @@ Built to beat a generic Depop clone on the things only a campus marketplace can 
 ```bash
 npm install
 npm run seed      # optional demo data; demo accounts use password "password123"
+npm run reset     # wipe local data and start over with fresh demo data
 npm run dev       # http://localhost:3000
 ```
 
