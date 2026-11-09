@@ -6,7 +6,7 @@ import { sendMessage } from "@/actions/social";
 import { timeAgo } from "@/lib/format";
 import { SubmitButton } from "@/components/forms";
 
-export const metadata = { title: "Conversation · Swap" };
+export const metadata = { title: "Conversation" };
 
 export default async function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();

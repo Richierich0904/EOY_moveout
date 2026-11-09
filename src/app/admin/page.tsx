@@ -7,7 +7,7 @@ import { runDrawNow } from "@/actions/game";
 import { AdminForms } from "@/components/AdminForms";
 import { PageIntro } from "@/components/PageIntro";
 
-export const metadata = { title: "Organisers · Swap" };
+export const metadata = { title: "Organisers" };
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ granted?: string }> }) {
   const user = await getCurrentUser();

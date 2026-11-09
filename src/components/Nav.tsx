@@ -43,7 +43,7 @@ export function Nav({ appName, user, counts, categoryCounts }: Props) {
         </div>
 
         <Link href="/" aria-label={`${appName} home`} className="flex items-center gap-1.5 justify-self-center text-fg">
-          <Mark size={24} /><span className="display hidden text-[15px] uppercase tracking-[.02em] sm:inline">{appName}</span>
+          <Mark size={24} /><span className="display hidden text-[15px] tracking-[.02em] sm:inline">{appName}</span>
         </Link>
 
         <div className="flex items-center justify-end gap-2 sm:gap-2.5">

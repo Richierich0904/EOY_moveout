@@ -20,7 +20,7 @@ export function Icon({ name, size = 18, stroke = 1.8 }: { name: keyof typeof PAT
   );
 }
 
-/** The Swap mark: a half-shaded arrowhead, after the reference's logo. */
+/** The Le-SWAP mark: a half-shaded arrowhead, after the reference's logo. */
 export function Mark({ size = 22 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden>

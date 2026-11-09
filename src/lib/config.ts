@@ -2,7 +2,7 @@
 // overridden with environment variables so the same code works for any school.
 
 export const SCHOOL_NAME = process.env.SCHOOL_NAME ?? "Our School";
-export const APP_NAME = process.env.APP_NAME ?? "Swap";
+export const APP_NAME = process.env.APP_NAME ?? "Le-SWAP";
 
 // Comma-separated list of email domains allowed to sign up, e.g. "students.school.edu,school.edu".
 // Empty means any email is allowed (handy for local development).

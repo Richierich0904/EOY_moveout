@@ -1,4 +1,4 @@
-# Swap — a campus marketplace for boarding schools
+# Le-SWAP — a campus marketplace for boarding schools
 
 Buy, sell and give away stuff with other students. Nothing ships, nothing gets thrown out in June.
 

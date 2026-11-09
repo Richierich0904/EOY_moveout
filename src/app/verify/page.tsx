@@ -4,7 +4,7 @@ import { VerifyForm } from "@/components/AuthForms";
 import { devVerifyCode, resendCode } from "@/actions/auth";
 import { PageIntro } from "@/components/PageIntro";
 
-export const metadata = { title: "Verify your email · Swap" };
+export const metadata = { title: "Verify your email" };
 
 export default async function VerifyPage() {
   const user = await getCurrentUser();

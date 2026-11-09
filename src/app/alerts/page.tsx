@@ -7,7 +7,7 @@ import { money, timeAgo } from "@/lib/format";
 import { deleteSavedSearch, markAllRead } from "@/actions/social";
 import { PageIntro } from "@/components/PageIntro";
 
-export const metadata = { title: "Alerts · Swap" };
+export const metadata = { title: "Alerts" };
 
 export default async function AlertsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const user = await getCurrentUser();

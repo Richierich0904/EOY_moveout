@@ -29,7 +29,7 @@ export function NavMenu({ sections, categories }: { sections: Item[]; categories
       <div id="site-menu" hidden={!open}
         className="absolute left-0 top-[calc(100%+12px)] z-40 grid w-[min(86vw,520px)] gap-6 border border-line bg-card p-6 shadow-[0_24px_60px_-20px_rgba(0,0,0,.25)] sm:grid-cols-2">
         <div className="grid content-start gap-1">
-          <p className="eyebrow mb-2">Swap</p>
+          <p className="eyebrow mb-2">Menu</p>
           {sections.map((s) => (
             <Link key={s.href} href={s.href} className="display text-[20px] uppercase leading-tight transition hover:text-accent">{s.label}{!!s.count && <span className="count ml-1">({s.count})</span>}</Link>
           ))}

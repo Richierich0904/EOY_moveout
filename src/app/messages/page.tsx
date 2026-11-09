@@ -5,7 +5,7 @@ import { listThreads } from "@/lib/social";
 import { timeAgo } from "@/lib/format";
 import { PageIntro } from "@/components/PageIntro";
 
-export const metadata = { title: "Messages · Swap" };
+export const metadata = { title: "Messages" };
 
 export default async function MessagesPage() {
   const user = await getCurrentUser();

@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { LoginForm } from "@/components/AuthForms";
 import { PageIntro } from "@/components/PageIntro";
 
-export const metadata = { title: "Log in · Swap" };
+export const metadata = { title: "Log in" };
 
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/");

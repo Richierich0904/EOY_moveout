@@ -9,7 +9,7 @@ import { PageIntro } from "@/components/PageIntro";
 function when(iso: string) { return new Date(iso.replace(" ", "T") + "Z").toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); }
 const PLACE = ["First prize", "Second prize", "Third prize"];
 
-export const metadata = { title: "Giveaway draw · Swap" };
+export const metadata = { title: "Giveaway draw" };
 
 export default async function LotteryPage() {
   runDueDraws();

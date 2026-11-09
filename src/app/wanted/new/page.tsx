@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { WantForm } from "@/components/WantForm";
 import { PageIntro } from "@/components/PageIntro";
 
-export const metadata = { title: "Post a wanted ad · Swap" };
+export const metadata = { title: "Post a wanted ad" };
 
 export default async function NewWant() {
   const user = await getCurrentUser();

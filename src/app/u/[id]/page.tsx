@@ -5,8 +5,9 @@ import { ListingCard } from "@/components/ListingCard";
 import { Badges } from "@/components/Badges";
 import { badgesFor } from "@/lib/game";
 import { classYear } from "@/lib/format";
+import { APP_NAME } from "@/lib/config";
 
-export const metadata = { title: "Profile · Swap" };
+export const metadata = { title: "Profile" };
 
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,7 +24,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-fg text-[26px] font-semibold text-bg">{u.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</span>
         <p className="eyebrow">{u.house} · Class of {classYear(u.grad_year)}</p>
         <h1 className="text-[clamp(2.2rem,5vw,3.2rem)]">{u.name}</h1>
-        <p className="sub">{rehomed} item{rehomed === 1 ? "" : "s"} rehomed · on Swap since {since}</p>
+        <p className="sub">{rehomed} item{rehomed === 1 ? "" : "s"} rehomed · on {APP_NAME} since {since}</p>
         <Badges list={badgesFor(u.id)} />
       </header>
       <section className="grid gap-5">

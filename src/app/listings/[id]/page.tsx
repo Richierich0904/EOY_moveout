@@ -19,7 +19,7 @@ import { Gallery } from "@/components/Gallery";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; const l = getListing(Number(id));
-  return { title: l ? `${l.title} · Swap` : "Not found · Swap" };
+  return { title: l ? `${l.title}` : "Not found" };
 }
 
 export default async function ListingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ reserved?: string; updated?: string }> }) {

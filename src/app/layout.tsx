@@ -10,7 +10,7 @@ import { creditBalance } from "@/lib/game";
 import { categoryShelves } from "@/lib/listings";
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} · ${SCHOOL_NAME}`,
+  title: { default: `${APP_NAME} · ${SCHOOL_NAME}`, template: `%s · ${APP_NAME}` },
   description: `Buy, sell and give away stuff with other students at ${SCHOOL_NAME}. Nothing ships, nothing gets thrown out.`,
 };
 export const viewport: Viewport = {

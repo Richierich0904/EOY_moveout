@@ -5,7 +5,7 @@ import { money, timeAgo } from "@/lib/format";
 import { PageIntro } from "@/components/PageIntro";
 import { Icon } from "@/components/Icons";
 
-export const metadata = { title: "Wanted · Swap" };
+export const metadata = { title: "Wanted" };
 
 export default async function WantedPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;

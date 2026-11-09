@@ -12,7 +12,7 @@ import { setWantStatus, deleteWant } from "@/actions/social";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; const w = getWant(Number(id));
-  return { title: w ? `Wanted: ${w.title} · Swap` : "Not found · Swap" };
+  return { title: w ? `Wanted: ${w.title}` : "Not found" };
 }
 
 export default async function WantPage({ params }: { params: Promise<{ id: string }> }) {

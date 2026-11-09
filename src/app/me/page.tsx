@@ -9,7 +9,7 @@ import { logout } from "@/actions/auth";
 import { badgesFor, creditBalance, creditHistory } from "@/lib/game";
 import { Badges } from "@/components/Badges";
 
-export const metadata = { title: "My account · Swap" };
+export const metadata = { title: "My account" };
 
 export default async function MePage({ searchParams }: { searchParams: Promise<{ listed?: string }> }) {
   const user = await getCurrentUser();
