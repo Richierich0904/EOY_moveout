@@ -9,6 +9,8 @@ import { PageIntro } from "@/components/PageIntro";
 function when(iso: string) { return new Date(iso.replace(" ", "T") + "Z").toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); }
 const PLACE = ["First prize", "Second prize", "Third prize"];
 
+export const metadata = { title: "Giveaway draw · Swap" };
+
 export default async function LotteryPage() {
   runDueDraws();
   const user = await getCurrentUser();
@@ -22,7 +24,7 @@ export default async function LotteryPage() {
   const past = pastDraws();
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-16 sm:gap-24">
+    <div className="grid max-w-4xl gap-16 sm:gap-24">
       {draw ? (
         <section className="grid gap-10">
           <PageIntro eyebrow={`The giveaway draw · draws ${when(draw.ends_at)}`} title={draw.title} sub={draw.description || `Every ${GIVEAWAYS_PER_TICKET} things you give away earns a ticket.`} />
@@ -55,7 +57,7 @@ export default async function LotteryPage() {
             )}
           </div>
 
-          <p className="reveal text-center text-[15px] text-muted">
+          <p className="reveal text-[15px] text-muted">
             {pool.length === 0 ? `Nobody has a ticket yet. First to give away ${GIVEAWAYS_PER_TICKET} things is the favourite.` : (
               <>{pool.length} {pool.length === 1 ? "person" : "people"} in the hat with {totalTickets} ticket{totalTickets === 1 ? "" : "s"}. Leading: {pool.slice(0, 5).map((e) => `${e.name.split(" ")[0]} (${e.tickets})`).join(", ")}.</>
             )}

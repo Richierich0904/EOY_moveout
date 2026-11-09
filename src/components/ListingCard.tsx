@@ -3,11 +3,12 @@ import type { Listing } from "@/lib/listings";
 import { categoryLabel } from "@/lib/config";
 import { Price } from "./Price";
 
-export function Thumb({ src, alt, className = "" }: { src: string | null; alt: string; className?: string }) {
+export function Thumb({ src, alt, label, className = "" }: { src: string | null; alt: string; label?: string; className?: string }) {
   if (src) return <img src={`/uploads/${src}`} alt={alt} loading="lazy" className={`h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.03] ${className}`} />;
   return (
-    <div className={`flex h-full w-full items-center justify-center ${className}`}>
-      <span className="display text-[40px] uppercase text-line">{alt.slice(0, 1)}</span>
+    <div className={`flex h-full w-full flex-col items-center justify-center gap-1 ${className}`}>
+      <span className="display text-[12px] uppercase tracking-[.1em] text-muted">{label ?? alt}</span>
+      <span className="text-[10.5px] uppercase tracking-[.08em] text-muted/60">No photo yet</span>
     </div>
   );
 }
@@ -18,8 +19,8 @@ export function ListingCard({ l }: { l: Listing }) {
   return (
     <Link href={`/listings/${l.id}`} data-listing className="group grid min-w-0 grid-cols-1 gap-2.5">
       <div className="card lift relative aspect-[4/5] overflow-hidden">
-        <Thumb src={l.image} alt={l.title} />
-        {gone && <div className="absolute inset-0 flex items-center justify-center bg-bg/75 text-[11px] font-semibold uppercase tracking-[.14em] text-fg">{l.status === "sold" ? "Rehomed" : "Reserved"}</div>}
+        <Thumb src={l.image} alt={l.title} label={categoryLabel(l.category)} />
+        {gone && <div className="absolute inset-0 flex items-center justify-center bg-bg/95 text-[11px] font-semibold uppercase tracking-[.14em] text-fg">{l.status === "sold" ? "Rehomed" : "Reserved"}</div>}
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
           {l.handoff === "fall" && <span className="bg-card px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[.08em] text-fg ring-1 ring-line">Fall handoff</span>}
           {l.accepts_credits === 1 && l.price_cents > 0 && <span className="bg-card px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[.08em] text-accent ring-1 ring-line">⭐ Credits</span>}

@@ -78,9 +78,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <h3 className="mb-2">Category</h3>
         {CATEGORIES.map((c) => {
           const on = sp.category === c.slug;
+          const n = counts.get(c.slug) ?? 0;
+          if (n === 0 && !on) return <span key={c.slug} className="flex items-center justify-between border-b border-line py-2.5 text-[12.5px] tracking-[.02em] text-muted/60"><span>{c.label} <span className="tabular-nums">(0)</span></span></span>;
           return (
             <Link key={c.slug} href={qs(sp, { category: on ? "" : c.slug })} className={`flex items-center justify-between border-b border-line py-2.5 text-[12.5px] tracking-[.02em] transition hover:text-accent ${on ? "font-bold" : ""}`}>
-              <span>{c.label} <span className="font-semibold text-accent tabular-nums">({counts.get(c.slug) ?? 0})</span></span><Icon name="right" size={13} />
+              <span>{c.label} <span className="font-semibold text-accent tabular-nums">({n})</span></span><Icon name="right" size={13} />
             </Link>
           );
         })}
@@ -106,8 +108,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               <p className="text-[13px] uppercase tracking-[.08em] text-muted">{SCHOOL_NAME}<br />{season()}</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Link href="#browse" className="btn-ghost min-w-[190px] justify-between normal-case tracking-[.02em]">Go to the shelves <Icon name="arrow" size={18} stroke={1.4} /></Link>
-              {!user && <Link href="/signup" className="btn-primary">Join with school email</Link>}
+              <Link href="#browse" className="btn-ghost h-12 min-w-[200px] justify-between">Go to the shelves <Icon name="arrow" size={18} stroke={1.6} /></Link>
+              {!user && <Link href="/signup" className="btn-primary h-12">Join with school email</Link>}
             </div>
           </div>
           <HeroPair pics={heroImages(6)} />
@@ -126,7 +128,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <section className="grid grid-cols-1 gap-8">
           <div className="reveal flex items-end justify-between gap-4">
             <h2 className="text-[clamp(2.2rem,5vw,3.6rem)] leading-[.88]">{thisWeek.length >= 4 ? <>New<br />this week<span className="count ml-1">({thisWeek.length})</span></> : <>Just<br />listed<span className="count ml-1">({row.length})</span></>}</h2>
-            <Link href="#browse" className="text-[12px] tracking-[.03em] underline-offset-4 hover:underline">See all</Link>
+            <Link href="#browse" className="more">See all</Link>
           </div>
           <div className="reveal">
             <Shelves label="New this week">
@@ -148,8 +150,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
                 <input id="browse-q" name="q" defaultValue={sp.q} placeholder="Search" className="input pl-10 text-right" />
               </form>
               <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
-                <Link href={qs(sp, { category: "", fall: "", free: "" })} className={!sp.category && !sp.fall && !sp.free ? "chip-on" : "chip"}>New</Link>
-                {CATEGORIES.slice(0, 9).map((c) => <Link key={c.slug} href={qs(sp, { category: sp.category === c.slug ? "" : c.slug })} className={sp.category === c.slug ? "chip-on truncate" : "chip truncate"}>{c.label.split(" ")[0]}</Link>)}
+                <Link href={qs(sp, { category: "", fall: "", free: "", min: "", max: "" })} className={!sp.category && !sp.fall && !sp.free && !sp.min && !sp.max ? "chip-on" : "chip"}>All</Link>
+                {CATEGORIES.slice(0, 9).map((c) => <Link key={c.slug} href={qs(sp, { category: sp.category === c.slug ? "" : c.slug })} className={sp.category === c.slug ? "chip-on truncate" : "chip truncate"}><span className="sm:hidden">{c.label.split(" ")[0]}</span><span className="hidden sm:inline">{c.label}</span></Link>)}
               </div>
             </div>
           </div>
@@ -176,8 +178,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
           <div className="grid min-w-0 content-start gap-6">
             <div className="flex flex-wrap items-center gap-3 border-b border-line pb-3">
               <details className="group w-full lg:hidden">
-                <summary className="flex cursor-pointer list-none items-center justify-between text-[12.5px] font-semibold uppercase tracking-[.08em] [&::-webkit-details-marker]:hidden">
-                  Filters <span className="group-open:hidden">(+)</span><span className="hidden group-open:inline">(−)</span>
+                <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-[12.5px] font-semibold uppercase tracking-[.08em] [&::-webkit-details-marker]:hidden">
+                  Filters<span className="group-open:hidden">(+)</span><span className="hidden group-open:inline">(−)</span>
                 </summary>
                 <div className="pb-4 pt-5">{filters}</div>
               </details>
@@ -214,7 +216,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         <section className="grid grid-cols-1 gap-8">
           <div className="reveal flex items-end justify-between gap-4">
             <h2 className="text-[clamp(2.2rem,5vw,3.6rem)] leading-[.88]">Wanted<span className="count ml-1">({wants.length})</span></h2>
-            <Link href="/wanted" className="text-[12px] tracking-[.03em] underline-offset-4 hover:underline">See all</Link>
+            <Link href="/wanted" className="more">See all</Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {wants.map((w, i) => (

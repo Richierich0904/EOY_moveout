@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen">
         <Nav appName={APP_NAME} user={user ? { name: user.name, credits: creditBalance(user.id), isAdmin: user.is_admin } : null} counts={counts} categoryCounts={categoryCounts} />
         <Motion />
-        <main className={`mx-auto w-full max-w-[1280px] ${gutter} pb-20 pt-4 sm:pt-8`}>{children}</main>
+        <main id="main" className={`mx-auto w-full max-w-[1280px] ${gutter} pb-20 pt-4 sm:pt-8`}>{children}</main>
         <footer className="border-t border-line">
           <div className={`mx-auto grid max-w-[1280px] gap-12 ${gutter} pb-10 pt-14 sm:pt-20`}>
             <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">

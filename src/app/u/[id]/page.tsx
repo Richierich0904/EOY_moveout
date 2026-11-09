@@ -6,6 +6,8 @@ import { Badges } from "@/components/Badges";
 import { badgesFor } from "@/lib/game";
 import { classYear } from "@/lib/format";
 
+export const metadata = { title: "Profile · Swap" };
+
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const u = getDb().prepare("SELECT id, name, house, grad_year, created_at FROM users WHERE id = ? AND verified = 1").get(Number(id)) as
@@ -26,7 +28,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
       </header>
       <section className="grid gap-5">
         <div className="reveal grid gap-1"><p className="eyebrow">On {first}&apos;s shelf</p><h2>Available from {first}</h2></div>
-        {listings.length === 0 ? <p className="card p-8 text-center text-muted">Nothing right now.</p> : (
+        {listings.length === 0 ? <p className="card p-8 text-muted">Nothing right now.</p> : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">{listings.map((l, i) => <div key={l.id} className="reveal" style={{ ["--i" as string]: i % 4 }}><ListingCard l={l} /></div>)}</div>
         )}
       </section>

@@ -7,6 +7,8 @@ import { money, timeAgo } from "@/lib/format";
 import { deleteSavedSearch, markAllRead } from "@/actions/social";
 import { PageIntro } from "@/components/PageIntro";
 
+export const metadata = { title: "Alerts · Swap" };
+
 export default async function AlertsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/alerts");
@@ -19,12 +21,12 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
   const unread = notes.filter((n) => !n.read).length;
 
   return (
-    <div className="mx-auto grid max-w-2xl gap-12">
+    <div className="grid max-w-2xl gap-12">
       <PageIntro eyebrow="Alerts" title={unread ? `${unread} thing${unread === 1 ? "" : "s"} you should see` : "Nothing new"} sub="Saved searches ping you the moment someone lists a match." />
 
       <section className="grid gap-4">
         <div className="flex items-end justify-between gap-3"><h2>Notifications</h2>{unread > 0 && <form action={markAllRead}><button className="more">Mark all read</button></form>}</div>
-        {notes.length === 0 ? <p className="card p-8 text-center text-muted">Nothing yet.</p> : (
+        {notes.length === 0 ? <p className="card p-8 text-muted">Nothing yet.</p> : (
           <ul className="card divide-y divide-line overflow-hidden">
             {notes.map((n) => (
               <li key={n.id}>

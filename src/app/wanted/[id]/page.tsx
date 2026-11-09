@@ -10,6 +10,11 @@ import { MessageForm } from "@/components/MessageForm";
 import { ListingCard } from "@/components/ListingCard";
 import { setWantStatus, deleteWant } from "@/actions/social";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params; const w = getWant(Number(id));
+  return { title: w ? `Wanted: ${w.title} · Swap` : "Not found · Swap" };
+}
+
 export default async function WantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const w = getWant(Number(id));
@@ -20,7 +25,7 @@ export default async function WantPage({ params }: { params: Promise<{ id: strin
   const first = w.user_name.split(" ")[0];
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-12">
+    <div className="grid max-w-3xl gap-12">
       <header className="rise grid gap-3">
         <p className="eyebrow">Wanted · {categoryLabel(w.category)}{w.status === "fulfilled" ? " · Found" : ""}</p>
         <h1 className="text-[clamp(2.2rem,5vw,3.4rem)]">{w.title}</h1>

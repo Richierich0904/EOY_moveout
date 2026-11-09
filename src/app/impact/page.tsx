@@ -7,6 +7,8 @@ import { PageIntro } from "@/components/PageIntro";
 const kg = (n: number) => (n < 10 ? n.toFixed(1) : String(Math.round(n)));
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
+export const metadata = { title: "Impact · Swap" };
+
 export default function ImpactPage() {
   const s = impactStats();
   const members = (getDb().prepare("SELECT COUNT(*) c FROM users WHERE verified = 1").get() as { c: number }).c;
@@ -16,7 +18,7 @@ export default function ImpactPage() {
   const hmax = Math.max(1, ...houses.map((h) => h.rehomed));
   const stats: [string, string | number][] = [["Items rehomed", s.items], ["Kept out of landfill", `~${kg(s.kg)} kg`], ["Given away free", s.freeItems], ["Kept in students' pockets", `$${Math.round(s.dollars)}`]];
   return (
-    <div className="mx-auto grid max-w-4xl gap-16 sm:gap-20">
+    <div className="grid max-w-4xl gap-16 sm:gap-20">
       <PageIntro eyebrow={`Impact at ${SCHOOL_NAME}`} title="Every swap is one less thing in the skip." sub="What has changed hands so far, and which house is doing the most of it." />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
         {stats.map(([k, v], i) => (

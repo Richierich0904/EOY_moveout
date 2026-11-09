@@ -6,11 +6,11 @@ import { useState } from "react";
 export function Gallery({ images, title }: { images: string[]; title: string }) {
   const [i, setI] = useState(0);
   if (images.length === 0) {
-    return <div className="card flex aspect-[4/5] items-center justify-center"><span className="display text-[80px] uppercase text-line">{title.slice(0, 1)}</span></div>;
+    return <div className="card flex aspect-[4/5] max-h-[calc(100vh-140px)] items-center justify-center"><span className="display text-[80px] uppercase text-line">{title.slice(0, 1)}</span></div>;
   }
   return (
     <div className="grid gap-3">
-      <div className="card relative aspect-[4/5] overflow-hidden">
+      <div className="card relative aspect-[4/5] max-h-[calc(100vh-140px)] overflow-hidden">
         {images.map((f, k) => (
           <img key={f} src={`/uploads/${f}`} alt={k === i ? title : ""} aria-hidden={k !== i}
             className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-700 ease-[cubic-bezier(.16,1,.3,1)] ${k === i ? "scale-100 opacity-100" : "scale-[1.02] opacity-0"}`} />

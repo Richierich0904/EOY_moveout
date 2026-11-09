@@ -27,6 +27,8 @@ export function Nav({ appName, user, counts, categoryCounts }: Props) {
   ];
   const categories = CATEGORIES.map((c) => ({ href: `/?category=${c.slug}#browse`, label: c.label, count: categoryCounts[c.slug] ?? 0 }));
   return (
+    <>
+    <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-fg focus:px-4 focus:py-2 focus:text-[12px] focus:font-semibold focus:uppercase focus:tracking-[.08em] focus:text-bg">Skip to content</a>
     <header id="site-nav"
       className="sticky top-[env(safe-area-inset-top,0px)] z-30 bg-[var(--nav)] backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(.25,.1,.25,1)] data-[hidden]:-translate-y-full">
       <div className="mx-auto grid h-[64px] max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center gap-3 pl-[max(16px,env(safe-area-inset-left,0px))] pr-[max(16px,env(safe-area-inset-right,0px))] sm:h-[76px] sm:px-8">
@@ -53,9 +55,8 @@ export function Nav({ appName, user, counts, categoryCounts }: Props) {
                 <span className="hidden sm:inline">Sell</span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-full ring-[1.5px] ring-white"><Icon name="plus" size={14} stroke={2.2} /></span>
               </Link>
-              <Link href="/me" aria-label="My account" className={round}><Icon name="user" size={16} /><span className="sr-only">{first}</span>
-                {user.credits > 0 && <span className="absolute -bottom-1 -right-2 rounded-full bg-bg px-1 text-[10px] font-bold text-fg ring-1 ring-line">⭐{user.credits / 100}</span>}
-              </Link>
+              {user.credits > 0 && <Link href="/me" className="hidden h-9 items-center border border-line px-2.5 text-[11.5px] font-semibold tabular-nums transition hover:border-fg sm:flex" aria-label={`${user.credits / 100} credits`}>⭐ {user.credits / 100}</Link>}
+              <Link href="/me" aria-label="My account" className={round}><Icon name="user" size={16} /><span className="sr-only">{first}</span></Link>
             </>
           ) : (
             <>
@@ -68,5 +69,6 @@ export function Nav({ appName, user, counts, categoryCounts }: Props) {
         </div>
       </div>
     </header>
+    </>
   );
 }

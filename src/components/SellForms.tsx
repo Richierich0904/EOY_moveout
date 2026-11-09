@@ -105,7 +105,7 @@ function BulkForm() {
 
 export function SellForms({ bulk, suggestions }: { bulk: boolean; suggestions: Suggestions }) {
   return (
-    <div className="mx-auto grid max-w-2xl gap-10">
+    <div className="grid max-w-2xl gap-10">
       <PageIntro eyebrow={bulk ? "Move-out mode" : "Sell or give away"} title={bulk ? "Clear out your room." : "List something."}
         sub={bulk ? "Ten things in two minutes. Most of it can just be free." : "A photo, a title and a price. Takes under a minute."}>
         <div role="tablist" aria-label="Listing mode" className="flex gap-1 border border-line p-1">

@@ -116,6 +116,7 @@ export async function setListingStatus(fd: FormData) {
         : `${user.name} reserved "${l.title}" for you.`, `/listings/${id}`);
   }
   revalidatePath("/"); revalidatePath(`/listings/${id}`); revalidatePath("/me");
+  redirect(`/listings/${id}?updated=1`);
 }
 
 function refundCredits(listingId: number, sellerId: number, buyerId: number, cents: number, title: string) {

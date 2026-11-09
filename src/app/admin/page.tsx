@@ -7,17 +7,19 @@ import { runDrawNow } from "@/actions/game";
 import { AdminForms } from "@/components/AdminForms";
 import { PageIntro } from "@/components/PageIntro";
 
+export const metadata = { title: "Organisers · Swap" };
+
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ granted?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/admin");
-  if (!user.is_admin) return <p className="card mx-auto max-w-xl p-8 text-center text-muted">Admins only. Add your email to <code>ADMIN_EMAILS</code> in the environment to get in.</p>;
+  if (!user.is_admin) return <p className="card max-w-xl p-8 text-center text-muted">Admins only. Add your email to <code>ADMIN_EMAILS</code> in the environment to get in.</p>;
   const { granted } = await searchParams;
   const draw = currentDraw();
   const pool = draw ? entrants(draw) : [];
   const stats = getDb().prepare("SELECT (SELECT COUNT(*) FROM users WHERE verified=1) users, (SELECT COUNT(*) FROM listings WHERE status='available') live, (SELECT COUNT(*) FROM listings WHERE status='sold') gone, (SELECT COALESCE(SUM(delta),0) FROM credit_transactions WHERE delta>0) issued").get() as { users: number; live: number; gone: number; issued: number };
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-8">
+    <div className="grid max-w-3xl gap-8">
       <PageIntro eyebrow="Organisers" title="Run the swap" sub="Draws, credits, and how the term is going." />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[["Students", stats.users], ["Live listings", stats.live], ["Rehomed", stats.gone], ["Credits issued", stats.issued / 100]].map(([k, v]) => <div key={String(k)} className="card grid gap-0.5 p-4"><div className="display text-[28px] leading-none tabular-nums">{v}</div><div className="text-[13px] text-muted">{k}</div></div>)}

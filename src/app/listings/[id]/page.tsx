@@ -17,9 +17,14 @@ import { confirmReceived } from "@/actions/game";
 import { badgesFor, creditBalance } from "@/lib/game";
 import { Gallery } from "@/components/Gallery";
 
-export default async function ListingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ reserved?: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params; const l = getListing(Number(id));
+  return { title: l ? `${l.title} · Swap` : "Not found · Swap" };
+}
+
+export default async function ListingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ reserved?: string; updated?: string }> }) {
   const { id } = await params;
-  const { reserved } = await searchParams;
+  const { reserved, updated } = await searchParams;
   const l = getListing(Number(id));
   if (!l) notFound();
   const images = getListingImages(l.id);
@@ -71,6 +76,7 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
           </dl>
 
           <div className="grid gap-3">
+            {updated && mine && <p className="border border-fg px-3 py-2 text-[12px] font-semibold uppercase tracking-[.08em]">Updated</p>}
             {reserved && <p className="bg-bg-deep p-3 text-[13px]">Reserved with your credits. Message {first} to arrange the handoff.</p>}
             {!available && !isBuyer && !mine && <p className="text-[13px] text-muted">{l.status === "sold" ? "This one found a home." : "Reserved for someone, but ask in case it falls through."}</p>}
             {isBuyer && l.status === "sold" && !l.received_at && (

@@ -9,6 +9,8 @@ import { logout } from "@/actions/auth";
 import { badgesFor, creditBalance, creditHistory } from "@/lib/game";
 import { Badges } from "@/components/Badges";
 
+export const metadata = { title: "My account · Swap" };
+
 export default async function MePage({ searchParams }: { searchParams: Promise<{ listed?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/me");
@@ -41,7 +43,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <Link href="/messages" className="btn-ghost">Messages</Link>
           <Link href="/wanted" className="btn-ghost sm:hidden">Wanted</Link>
           {user.is_admin && <Link href="/admin" className="btn-ghost">Organisers</Link>}
-          <form action={logout} className="sm:ml-auto"><button className="btn-ghost text-muted">Sign out</button></form>
+          <form action={logout} className="sm:ml-auto"><button className="btn-ghost">Sign out</button></form>
         </div>
       </header>
 
@@ -54,7 +56,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       <section className="grid gap-5">
         <div className="reveal flex items-end justify-between gap-3"><div className="grid gap-1"><p className="eyebrow">Your shelf</p><h2>My listings</h2></div><Link href="/listings/new" className="more">List another</Link></div>
-        {listings.length === 0 ? <p className="card p-8 text-center text-muted">Nothing listed yet.</p> : (
+        {listings.length === 0 ? <p className="card p-8 text-muted">Nothing listed yet.</p> : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">{listings.map((l, i) => <div key={l.id} className="reveal" style={{ ["--i" as string]: i % 4 }}><ListingCard l={l} /></div>)}</div>
         )}
       </section>
@@ -75,7 +77,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       <section className="grid gap-5">
         <div className="reveal flex items-end justify-between gap-3"><div className="grid gap-1"><p className="eyebrow">What you&apos;re after</p><h2>My wanted posts</h2></div><Link href="/wanted/new" className="more">New wanted post</Link></div>
-        {wants.length === 0 ? <p className="card p-8 text-center text-muted">None yet.</p> : (
+        {wants.length === 0 ? <p className="card p-8 text-muted">None yet.</p> : (
           <ul className="card reveal divide-y divide-line overflow-hidden">
             {wants.map((w) => (
               <li key={w.id}><Link href={`/wanted/${w.id}`} className="flex items-baseline justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-bg">

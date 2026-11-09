@@ -4,6 +4,8 @@ import { SellForms } from "@/components/SellForms";
 import { CATEGORIES } from "@/lib/config";
 import { priceSuggestion } from "@/lib/listings";
 
+export const metadata = { title: "Sell something · Swap" };
+
 export default async function NewListing({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/listings/new");

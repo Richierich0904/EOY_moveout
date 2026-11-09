@@ -5,16 +5,18 @@ import { listThreads } from "@/lib/social";
 import { timeAgo } from "@/lib/format";
 import { PageIntro } from "@/components/PageIntro";
 
+export const metadata = { title: "Messages · Swap" };
+
 export default async function MessagesPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/messages");
   const threads = listThreads(user.id);
   const unread = threads.reduce((a, t) => a + t.unread, 0);
   return (
-    <div className="mx-auto grid max-w-2xl gap-10">
+    <div className="grid max-w-2xl gap-10">
       <PageIntro eyebrow="Messages" title={unread ? `${unread} new message${unread === 1 ? "" : "s"}` : "All caught up"} sub="Agree on a spot and a time. Everything else happens in person." />
       {threads.length === 0 ? (
-        <p className="card p-10 text-center text-muted">No conversations yet. Message a seller from any listing.</p>
+        <p className="card p-10 text-muted">No conversations yet. Message a seller from any listing.</p>
       ) : (
         <ul className="card reveal divide-y divide-line overflow-hidden">
           {threads.map((t) => (

@@ -6,6 +6,8 @@ import { sendMessage } from "@/actions/social";
 import { timeAgo } from "@/lib/format";
 import { SubmitButton } from "@/components/forms";
 
+export const metadata = { title: "Conversation · Swap" };
+
 export default async function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -17,7 +19,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
   const link = t.listing_id ? `/listings/${t.listing_id}` : t.want_id ? `/wanted/${t.want_id}` : null;
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-2xl flex-col gap-6">
+    <div className="flex min-h-[70vh] max-w-2xl flex-col gap-6">
       <div className="flex items-center gap-3 border-b border-line pb-4">
         <Link href="/messages" aria-label="All messages" className="flex h-9 w-9 items-center justify-center rounded-full bg-fg/[.07] transition hover:bg-fg/[.13]">←</Link>
         <div className="min-w-0">
