@@ -2,9 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { checkPassword, createSession, destroyAllSessions, destroySession, emailAllowed, getCurrentUser, hashPassword, makeVerifyCode, safeNext, sameCode } from "@/lib/auth";
+import { checkPassword, createSession, destroyAllSessions, destroySession, getCurrentUser, hashPassword, makeVerifyCode, safeNext, sameCode } from "@/lib/auth";
+import { emailProblem, gradYearFor, lastNameHint, nameMatchesEmail } from "@/lib/student-email";
 import {
-  ALLOWED_EMAIL_DOMAINS, CODE_ATTEMPTS, CODE_MINUTES, HOUSES, LIMITS, LOGIN_ATTEMPTS, LOGIN_WINDOW_MINUTES,
+  CODE_ATTEMPTS, CODE_MINUTES, HOUSES, LIMITS, LOGIN_ATTEMPTS, LOGIN_WINDOW_MINUTES,
   RESEND_SECONDS, SHOW_CODES_ON_SCREEN, SIGNUP_OPEN, WELCOME_CREDITS,
 } from "@/lib/config";
 import { sendCode } from "@/lib/mail";
@@ -22,16 +23,17 @@ export async function signup(_prev: FormState, fd: FormData): Promise<FormState>
   const email = str(fd, "email").toLowerCase();
   const name = str(fd, "name").replace(/\s+/g, " ");
   const house = str(fd, "house");
-  const gradYear = parseInt(str(fd, "grad_year"), 10);
   const password = String(fd.get("password") ?? "");
 
   if (email.length > 120 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Enter a valid email." };
-  if (!emailAllowed(email)) return { error: `Use your school email (${ALLOWED_EMAIL_DOMAINS.map((d) => "@" + d).join(" or ")}).` };
-  if (name.length < 2) return { error: "Enter your name." };
+  const problem = emailProblem(email);
+  if (problem) return { error: problem };
+  if (name.length < 2 || !/\S\s+\S/.test(name)) return { error: "Enter your first and last name." };
   if (name.length > LIMITS.name) return { error: `Name is too long (${LIMITS.name} characters max).` };
+  if (!nameMatchesEmail(name, email)) return { error: `Use your real last name. It should match the one in your school email (${lastNameHint(email)}). If that's wrong for you, ask an organiser.` };
   if (!HOUSES.includes(house)) return { error: "Pick your dorm." };
-  const y = new Date().getFullYear();
-  if (!(gradYear >= y - 1 && gradYear <= y + 8)) return { error: "Enter a realistic graduation year." };
+  // The class year is read from the email address, so nobody can claim the wrong one.
+  const gradYear = gradYearFor(email);
   if (password.length < 8) return { error: "Password needs at least 8 characters." };
   if (password.length > 72) return { error: "Password is too long (72 characters max)." };
   if (fd.get("rules") !== "on") return { error: "Please read and agree to the rules first." };

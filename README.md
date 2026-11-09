@@ -8,7 +8,7 @@ It is built for a school, which means it is built for minors. Only verified stud
 
 | Feature | Why it matters here |
 |---|---|
-| **School-email sign-up** with real name, dorm and class year | Everyone is a verified student. A code is emailed to the school address and expires after 15 minutes. |
+| **School-email sign-up** with real name, dorm and class year | Only student addresses on the school domain can join (last name, first initial, class year, for example `smithj27@mercersburg.edu`). The class year is read from the address and the typed last name must match it. A code is emailed to the address and expires after 15 minutes. |
 | **Students only** | Visitors see a welcome page with no student information. Listings, profiles, rankings and photos all need a login. Search engines are told to stay out. |
 | **Free pile** | Most end-of-year stuff is worth $0. Capturing it is what makes the app feel alive. |
 | **Wanted board** | In a tiny market, demand-side posts drive half the trades. |
@@ -52,6 +52,8 @@ npm run dev       # http://localhost:3000
 
 Copy `.env.example` to `.env.local` to change settings. To try the organiser pages with the demo data, add `ADMIN_EMAILS=maya@demo.school`.
 
+The demo accounts use `@demo.school` addresses and can only log in. To try signing up, use a student-shaped address such as `studentt27@mercersburg.edu` with the name "Test Student".
+
 In development no email is sent. The sign-up code is shown on the verify page and printed in the terminal, and so are password-reset codes (terminal only).
 
 To run the production build locally with demo data, set `DEMO_MODE=1` (a banner on every page says so):
@@ -63,13 +65,13 @@ DEMO_MODE=1 ADMIN_EMAILS=maya@demo.school npm start
 
 ## Before real students use it
 
-A production build (`npm start`) keeps **sign-up closed** until the first two items are set, and never shows codes on screen.
+The school name, email domain, student address shape and time zone are already set for Mercersburg Academy. A production build (`npm start`) keeps **sign-up closed** until a mail service is set, and never shows codes on screen.
 
-1. `ALLOWED_EMAIL_DOMAINS`: the school's student email domain.
+1. `ALLOWED_EMAIL_DOMAINS` and `STUDENT_EMAIL_PATTERN`: already `mercersburg.edu` and the student address shape. Change them only if the school's addresses change.
 2. `SMTP_URL` and `MAIL_FROM`: a mail service to send the codes. Any SMTP provider works.
 3. `ADMIN_EMAILS`: the organisers. At least one adult.
 4. `SAFETY_CONTACT_NAME` and `SAFETY_CONTACT_EMAIL`: the adult students are pointed to.
-5. `SCHOOL_NAME` and `SCHOOL_TZ` (for example `America/New_York`).
+5. `SCHOOL_NAME` and `SCHOOL_TZ`: already Mercersburg Academy and `America/New_York`.
 6. `HANDOFF_SPOTS`: public places on campus. Never dorm rooms.
 7. `DATA_DIR`: a persistent folder, backed up.
 8. Serve it over HTTPS, and leave `DEMO_MODE` unset.
@@ -94,6 +96,7 @@ src/middleware.ts       the login wall (first check; pages confirm with requireV
 src/lib/config.ts       school settings, limits, credit and fair-play numbers
 src/lib/db.ts           SQLite connection + schema (auto-created and migrated on start)
 src/lib/auth.ts         sessions, password hashing, who may see what
+src/lib/student-email.ts  who may join: the student address shape, class year, last-name check
 src/lib/mail.ts         sending codes by email
 src/lib/time.ts         school time zone: weeks, months, deadlines, dates
 src/lib/listings.ts     search/filter queries, boosts in the sort order, impact stats

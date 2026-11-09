@@ -3,7 +3,7 @@ import { requireViewer } from "@/lib/auth";
 import { searchListings } from "@/lib/listings";
 import { listWants } from "@/lib/social";
 import { ListingCard } from "@/components/ListingCard";
-import { money, timeAgo, classYear } from "@/lib/format";
+import { money, timeAgo, classLabel } from "@/lib/format";
 import { logout } from "@/actions/auth";
 import { activeBoost, creditBalance, creditHistory } from "@/lib/game";
 import { myBlocks } from "@/lib/moderation";
@@ -78,7 +78,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <div className="grid gap-4">
             <AvatarForm name={user.name} avatar={user.avatar} />
             <div className="grid gap-2">
-              <p className="eyebrow">{user.house} · Class of {classYear(user.grad_year)}</p>
+              <p className="eyebrow">{user.house} · {classLabel(user.grad_year)}</p>
               <h1 className="text-[clamp(2.4rem,5vw,3.6rem)]">{user.name}</h1>
             </div>
           </div>

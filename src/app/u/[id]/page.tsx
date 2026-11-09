@@ -10,7 +10,7 @@ import { ReportForm } from "@/components/ReportForm";
 import { awardsFor, badgesFor, myRanks, personalTotals } from "@/lib/progress";
 import { REPORT_REASONS, iBlocked, isBlocked } from "@/lib/moderation";
 import { blockUser, unblockUser } from "@/actions/moderation";
-import { classYear } from "@/lib/format";
+import { classLabel } from "@/lib/format";
 import { fmtDate } from "@/lib/time";
 import { APP_NAME } from "@/lib/config";
 
@@ -59,7 +59,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
     <div className="grid gap-14">
       <header className="rise grid gap-4">
         <Face name={u.name} avatar={u.avatar} size={88} />
-        <p className="eyebrow">{u.house} · Class of {classYear(u.grad_year)}{u.suspended_at ? " · Paused" : ""}</p>
+        <p className="eyebrow">{u.house} · {classLabel(u.grad_year)}{u.suspended_at ? " · Paused" : ""}</p>
         <h1 className="text-[clamp(2.2rem,5vw,3.2rem)]">{u.name}</h1>
         <p className="sub">{totals.handoffs} item{totals.handoffs === 1 ? "" : "s"} rehomed · {totals.points} points{totals.streak > 1 ? ` · ${totals.streak}-week streak` : ""} · on {APP_NAME} since {since}</p>
         <Badges list={badgesFor(u.id, totals.streak)} />

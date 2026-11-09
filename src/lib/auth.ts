@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { getDb } from "./db";
-import { ADMIN_EMAILS, ALLOWED_EMAIL_DOMAINS, SESSION_DAYS } from "./config";
+import { ADMIN_EMAILS, SESSION_DAYS } from "./config";
 import { sqlTime } from "./time";
 
 export type User = {
@@ -24,12 +24,6 @@ export type User = {
 };
 
 export const SESSION_COOKIE = "swap_session";
-
-export function emailAllowed(email: string) {
-  if (ALLOWED_EMAIL_DOMAINS.length === 0) return true;
-  const domain = email.split("@")[1]?.toLowerCase();
-  return !!domain && ALLOWED_EMAIL_DOMAINS.includes(domain);
-}
 
 export async function hashPassword(pw: string) {
   return bcrypt.hash(pw, 10);

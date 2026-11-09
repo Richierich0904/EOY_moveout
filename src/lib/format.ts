@@ -22,3 +22,8 @@ export function timeAgo(iso: string) {
 export function classYear(gradYear: number) {
   return `'${String(gradYear).slice(-2)}`;
 }
+
+/** "Class of '27" for students. Organisers who are staff have no class year. */
+export function classLabel(gradYear: number) {
+  return gradYear > 0 ? `Class of ${classYear(gradYear)}` : "Staff";
+}

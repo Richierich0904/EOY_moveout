@@ -6,17 +6,14 @@ import { FormError, FormNote, SubmitButton, useKeptForm } from "./forms";
 
 const check = "mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer accent-[var(--pop)]";
 
-export function ProfileForm({ user, houses }: { user: { name: string; house: string; grad_year: number; hide_from_rankings: number }; houses: string[] }) {
+export function ProfileForm({ user, houses, classLabel }: { user: { name: string; house: string; hide_from_rankings: number }; houses: string[]; classLabel: string }) {
   const [state, onSubmit, pending] = useKeptForm(updateProfile);
-  const y = new Date().getFullYear();
-  const years = Array.from(new Set([user.grad_year, ...Array.from({ length: 8 }, (_, i) => y + i)])).sort();
   return (
     <form onSubmit={onSubmit} className="grid gap-4">
-      <div><label className="label" htmlFor="set-name">Full name</label><input id="set-name" name="name" required maxLength={60} defaultValue={user.name} autoComplete="name" className="input" /></div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><label className="label" htmlFor="set-house">Dorm</label><select id="set-house" name="house" defaultValue={user.house} className="input">{houses.map((h) => <option key={h}>{h}</option>)}</select></div>
-        <div><label className="label" htmlFor="set-year">Graduation year</label><select id="set-year" name="grad_year" defaultValue={user.grad_year} className="input">{years.map((v) => <option key={v} value={v}>{v}</option>)}</select></div>
-      </div>
+      <div><label className="label" htmlFor="set-name">First and last name</label><input id="set-name" name="name" required maxLength={60} defaultValue={user.name} autoComplete="name" className="input" />
+        <p className="mt-1.5 text-[13px] text-muted">Your last name has to match your school email.</p></div>
+      <div><label className="label" htmlFor="set-house">Dorm</label><select id="set-house" name="house" defaultValue={user.house} className="input">{houses.map((h) => <option key={h}>{h}</option>)}</select>
+        <p className="mt-1.5 text-[13px] text-muted">{classLabel}. This comes from your email address and can&apos;t be changed here.</p></div>
       <label className="flex items-start gap-3 bg-bg-deep p-3.5 text-[13.5px]">
         <input type="checkbox" name="hide_from_rankings" defaultChecked={user.hide_from_rankings === 1} className={check} />
         <span><b className="font-semibold">Hide me from the rankings.</b> <span className="text-muted">Your handoffs still count for your dorm and your own progress, but your name won&apos;t be on the tables and you won&apos;t win ranking prizes.</span></span>

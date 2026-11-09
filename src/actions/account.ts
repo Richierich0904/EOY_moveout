@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { checkPassword, createSession, destroyAllSessions, destroySession, hashPassword, requireUser } from "@/lib/auth";
 import { HOUSES, LIMITS } from "@/lib/config";
 import { deleteImages } from "@/lib/upload";
+import { lastNameHint, nameMatchesEmail } from "@/lib/student-email";
 import type { FormState } from "./auth";
 
 function str(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
@@ -15,14 +16,12 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   try { user = await requireUser(); } catch (e) { return { error: (e as Error).message }; }
   const name = str(fd, "name").replace(/\s+/g, " ");
   const house = str(fd, "house");
-  const gradYear = parseInt(str(fd, "grad_year"), 10);
-  if (name.length < 2) return { error: "Enter your name." };
+  if (name.length < 2 || !/\S\s+\S/.test(name)) return { error: "Enter your first and last name." };
   if (name.length > LIMITS.name) return { error: `Name is too long (${LIMITS.name} characters max).` };
+  if (!nameMatchesEmail(name, user.email)) return { error: `Your last name has to match the one in your school email (${lastNameHint(user.email)}).` };
   if (!HOUSES.includes(house)) return { error: "Pick your dorm." };
-  const y = new Date().getFullYear();
-  if (!(gradYear >= y - 1 && gradYear <= y + 8)) return { error: "Enter a realistic graduation year." };
-  getDb().prepare("UPDATE users SET name = ?, house = ?, grad_year = ?, hide_from_rankings = ? WHERE id = ?")
-    .run(name, house, gradYear, fd.get("hide_from_rankings") === "on" ? 1 : 0, user.id);
+  getDb().prepare("UPDATE users SET name = ?, house = ?, hide_from_rankings = ? WHERE id = ?")
+    .run(name, house, fd.get("hide_from_rankings") === "on" ? 1 : 0, user.id);
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved." };
 }

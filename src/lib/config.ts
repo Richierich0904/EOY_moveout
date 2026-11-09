@@ -1,7 +1,7 @@
 // Central place for school-specific settings. Most of these can be
 // overridden with environment variables so the same code works for any school.
 
-export const SCHOOL_NAME = process.env.SCHOOL_NAME ?? "Our School";
+export const SCHOOL_NAME = process.env.SCHOOL_NAME ?? "Mercersburg Academy";
 export const APP_NAME = process.env.APP_NAME ?? "Le-SWAP";
 
 // The school's time zone. Weeks, months, draw deadlines and every date shown use it.
@@ -15,12 +15,18 @@ export const DEMO_MODE = process.env.DEMO_MODE === "1";
 export const SMTP_URL = process.env.SMTP_URL ?? "";
 export const MAIL_FROM = process.env.MAIL_FROM ?? "";
 
-// Comma-separated list of email domains allowed to sign up, e.g. "students.school.edu,school.edu".
-// Empty means any email is allowed, which only works in development or demo mode.
-export const ALLOWED_EMAIL_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS ?? "")
+// Comma-separated list of email domains allowed to sign up.
+// Set it to an empty value to allow any email, which only works in development or demo mode.
+export const ALLOWED_EMAIL_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS ?? "mercersburg.edu")
   .split(",")
   .map((d) => d.trim().toLowerCase())
   .filter(Boolean);
+
+// What the part before the @ must look like for a student: last name, first initial, class year
+// (smithj27). Staff addresses on the same domain have no year, so they can't join as students.
+export const STUDENT_EMAIL_PATTERN = new RegExp(process.env.STUDENT_EMAIL_PATTERN ?? "^[a-z][a-z'.-]*[a-z](\\d{2}|\\d{4})$");
+// The last name typed at sign-up must match the one in the email. NAME_CHECK=off turns that off.
+export const NAME_CHECK = process.env.NAME_CHECK !== "off";
 
 /** On the real site nobody can sign up until the school's email domain and a mail service are set. */
 export const SIGNUP_OPEN = !IS_PROD || DEMO_MODE || (SMTP_URL !== "" && ALLOWED_EMAIL_DOMAINS.length > 0);

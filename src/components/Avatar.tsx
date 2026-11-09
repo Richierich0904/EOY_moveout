@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { classYear } from "@/lib/format";
+import { classLabel } from "@/lib/format";
 
 /** A round profile photo, or the person's initials on black when they haven't added one. */
 export function Face({ name, avatar, size = 40, className = "" }: { name: string; avatar?: string | null; size?: number; className?: string }) {
@@ -15,7 +15,7 @@ export function Who({ id, name, house, gradYear, avatar, small }: { id: number; 
       <Face name={name} avatar={avatar} size={small ? 28 : 40} />
       <span className="leading-tight">
         <span className="block font-semibold">{name}</span>
-        <span className="block text-[11.5px] text-muted">{house} · Class of {classYear(gradYear)}</span>
+        <span className="block text-[11.5px] text-muted">{house} · {classLabel(gradYear)}</span>
       </span>
     </Link>
   );

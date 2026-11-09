@@ -21,16 +21,14 @@ export function LoginForm({ next }: { next?: string }) {
 
 export function SignupForm({ houses, domains, staffNotice }: { houses: string[]; domains: string[]; staffNotice: string }) {
   const [state, onSubmit, pending] = useKeptForm(signup);
-  const y = new Date().getFullYear();
   return (
     <form onSubmit={onSubmit} className="grid gap-4">
-      <div><label className="label" htmlFor="su-email">School email</label><input id="su-email" name="email" type="email" required autoComplete="email" maxLength={120} placeholder={domains[0] ? `you@${domains[0]}` : "you@school.edu"} className="input" />
-        {domains.length > 0 && <p className="mt-1.5 text-[13px] text-muted">Only {domains.map((d) => "@" + d).join(", ")} addresses can join. That&apos;s how everyone here is a real student.</p>}</div>
-      <div><label className="label" htmlFor="su-name">Full name</label><input id="su-name" name="name" required maxLength={60} autoComplete="name" className="input" /></div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><label className="label" htmlFor="su-house">Dorm</label><select id="su-house" name="house" className="input">{houses.map((h) => <option key={h}>{h}</option>)}</select></div>
-        <div><label className="label" htmlFor="su-year">Graduation year</label><select id="su-year" name="grad_year" defaultValue={y + 1} className="input">{Array.from({ length: 7 }, (_, i) => y + i).map((v) => <option key={v} value={v}>{v}</option>)}</select></div>
-      </div>
+      <div><label className="label" htmlFor="su-email">School email</label><input id="su-email" name="email" type="email" required autoComplete="email" maxLength={120} placeholder={domains[0] ? `smithj27@${domains[0]}` : "you@school.edu"} className="input" />
+        {domains.length > 0 && <p className="mt-1.5 text-[13px] text-muted">Only student {domains.map((d) => "@" + d).join(", ")} addresses can join. That&apos;s how everyone here is a real student.</p>}</div>
+      <div><label className="label" htmlFor="su-name">First and last name</label><input id="su-name" name="name" required maxLength={60} autoComplete="name" className="input" />
+        <p className="mt-1.5 text-[13px] text-muted">Your last name has to match your school email. A nickname is fine for your first name.</p></div>
+      <div><label className="label" htmlFor="su-house">Dorm</label><select id="su-house" name="house" className="input">{houses.map((h) => <option key={h}>{h}</option>)}</select>
+        <p className="mt-1.5 text-[13px] text-muted">Your class year is read from your email address.</p></div>
       <div><label className="label" htmlFor="su-pw">Password</label><input id="su-pw" name="password" type="password" required minLength={8} maxLength={72} autoComplete="new-password" className="input" /></div>
       <label className="flex items-start gap-3 bg-bg-deep p-3.5 text-[13.5px]">
         <input type="checkbox" name="rules" required className="mt-0.5 h-[18px] w-[18px] shrink-0 cursor-pointer accent-[var(--pop)]" />
