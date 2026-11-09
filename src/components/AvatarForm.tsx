@@ -16,9 +16,9 @@ export function AvatarForm({ name, avatar }: { name: string; avatar: string | nu
       </div>
       <div className="grid gap-1.5">
         <form ref={form} action={action}>
-          <label htmlFor="avatar-file" className="chip cursor-pointer">{avatar ? "Change photo" : "Add a photo"}</label>
-          <input id="avatar-file" name="avatar" type="file" accept="image/*" className="sr-only"
+          <input id="avatar-file" name="avatar" type="file" accept="image/*" className="peer sr-only"
             onChange={() => form.current?.requestSubmit()} />
+          <label htmlFor="avatar-file" className="chip cursor-pointer peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--pop)]">{avatar ? "Change photo" : "Add a photo"}</label>
         </form>
         {avatar && <form action={removeAvatar}><button className="text-[11.5px] text-muted underline-offset-2 hover:text-fg hover:underline">Remove photo</button></form>}
         {state?.error && <p role="alert" className="text-[12px] text-fg">{state.error}</p>}

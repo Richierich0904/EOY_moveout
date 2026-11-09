@@ -4,6 +4,8 @@ import { GIVEAWAYS_PER_TICKET, HOUSES, categoryKg } from "./config";
 import { notify } from "./social";
 
 // ---------- credits ----------
+// Credits are earned (handoffs, ranking prizes, draw prizes, organiser grants) and spent on boosts.
+// They can't be bought, sent to another student, or turned into money.
 
 export function creditBalance(userId: number): number {
   return (getDb().prepare("SELECT COALESCE(SUM(delta),0) s FROM credit_transactions WHERE user_id = ?").get(userId) as { s: number }).s;
@@ -18,12 +20,18 @@ export function creditHistory(userId: number) {
     { id: number; delta: number; reason: string; listing_id: number | null; created_at: string }[];
 }
 
-// ---------- giveaways & tickets ----------
+/** The listing this student is boosting right now, if any. One boost at a time. */
+export function activeBoost(userId: number) {
+  return (getDb().prepare("SELECT id, title, boosted_until FROM listings WHERE user_id = ? AND status = 'available' AND boosted_until > datetime('now') LIMIT 1").get(userId) as
+    { id: number; title: string; boosted_until: string } | undefined) ?? null;
+}
 
-/** A giveaway only counts once the person who got it taps "I received it". That stops people
- *  listing junk and marking it "gone" to farm tickets. */
-const GIVEAWAY_WHERE = "price_cents = 0 AND status = 'sold' AND buyer_id IS NOT NULL AND buyer_id != user_id AND received_at IS NOT NULL";
-const GIVEAWAY_WHERE_L = "l.price_cents = 0 AND l.status = 'sold' AND l.buyer_id IS NOT NULL AND l.buyer_id != l.user_id AND l.received_at IS NOT NULL";
+// ---------- giveaways & draw entries ----------
+
+/** A giveaway only counts once the person who got it taps "I received it", and only within the
+ *  fair-play limits (see confirmReceived). That stops people listing junk and marking it "gone". */
+const GIVEAWAY_WHERE = "price_cents = 0 AND status = 'sold' AND received_at IS NOT NULL AND counted = 1";
+const GIVEAWAY_WHERE_L = "l.price_cents = 0 AND l.status = 'sold' AND l.received_at IS NOT NULL AND l.counted = 1";
 
 export function giveawaysInWindow(userId: number, startsAt: string, endsAt: string): number {
   return (getDb().prepare(`SELECT COUNT(*) c FROM listings WHERE user_id = ? AND ${GIVEAWAY_WHERE} AND received_at >= ? AND received_at <= ?`)
@@ -53,17 +61,17 @@ export function entrants(draw: Draw): Entrant[] {
   const rows = getDb().prepare(
     `SELECT u.id AS user_id, u.name, u.house, COUNT(*) AS giveaways
      FROM listings l JOIN users u ON u.id = l.user_id
-     WHERE ${GIVEAWAY_WHERE_L} AND l.received_at >= ? AND l.received_at <= ?
+     WHERE ${GIVEAWAY_WHERE_L} AND u.suspended_at IS NULL AND l.received_at >= ? AND l.received_at <= ?
      GROUP BY u.id ORDER BY giveaways DESC, u.name`).all(draw.starts_at, draw.ends_at) as Omit<Entrant, "tickets">[];
   return rows.map((r) => ({ ...r, tickets: ticketsFor(r.giveaways) })).filter((r) => r.tickets > 0);
 }
 
-/** Pick winners: one per prize, weighted by tickets. Nobody wins twice unless there are more
+/** Pick winners: one per prize, weighted by entries. Nobody wins twice unless there are more
  *  prizes than entrants. Uses crypto randomness so it can't be predicted. */
 export function runDraw(drawId: number): { prize: Prize; winner: Entrant | null }[] {
   const db = getDb();
   const draw = db.prepare("SELECT * FROM draws WHERE id = ?").get(drawId) as Draw | undefined;
-  if (!draw || draw.drawn_at) throw new Error("Draw not found or already drawn.");
+  if (!draw || draw.drawn_at) return [];
   const pool = entrants(draw);
   const prizes = prizesFor(drawId);
   const results: { prize: Prize; winner: Entrant | null }[] = [];
@@ -81,7 +89,7 @@ export function runDraw(drawId: number): { prize: Prize; winner: Entrant | null 
         db.prepare("UPDATE prizes SET winner_id = ? WHERE id = ?").run(winner.user_id, prize.id);
         if (prize.credit_cents > 0) addCredits(winner.user_id, prize.credit_cents, `Won "${prize.title}" in ${draw.title}`);
         notify(winner.user_id, `🎉 You won: ${prize.title}`,
-          prize.credit_cents > 0 ? `${prize.credit_cents / 100} credits were added to your balance.` : "The organisers will be in touch to hand it over.", "/lottery");
+          prize.credit_cents > 0 ? `${prize.credit_cents / 100} credits were added to your balance. Spend them on boosting a listing.` : "The organisers will be in touch to hand it over.", "/draw");
         remaining = remaining.filter((e) => e.user_id !== winner!.user_id);
       }
       results.push({ prize, winner });
@@ -92,26 +100,26 @@ export function runDraw(drawId: number): { prize: Prize; winner: Entrant | null 
   return results;
 }
 
-/** Lazy scheduler: any page that calls this will close out draws whose deadline has passed. */
+/** Close out draws whose deadline has passed. Called from housekeeping. */
 export function runDueDraws() {
   const due = getDb().prepare("SELECT id FROM draws WHERE drawn_at IS NULL AND ends_at <= datetime('now')").all() as { id: number }[];
   for (const d of due) runDraw(d.id);
 }
 
-// ---------- badges & leaderboard ----------
-
+// ---------- dorm cup ----------
 
 export type HouseRow = { house: string; members: number; rehomed: number; given: number; kg: number; rank: number };
 
-/** Every dorm from the config, plus any other dorm a member still has on file. Tied dorms share a rank. */
+/** Every dorm from the config, plus any other dorm a member still has on file. Tied dorms share a rank.
+ *  Only handoffs the receiver confirmed count, so a dorm can't climb by marking its own listings as gone. */
 export function houseLeaderboard(): HouseRow[] {
   const rows = getDb().prepare(
     `SELECT u.house, COUNT(DISTINCT u.id) AS members,
        COUNT(l.id) AS rehomed,
        SUM(CASE WHEN l.price_cents = 0 THEN 1 ELSE 0 END) AS given,
        GROUP_CONCAT(l.category) AS cats
-     FROM users u LEFT JOIN listings l ON l.user_id = u.id AND l.status = 'sold'
-     WHERE u.verified = 1 GROUP BY u.house`).all() as { house: string; members: number; rehomed: number; given: number; cats: string | null }[];
+     FROM users u LEFT JOIN listings l ON l.user_id = u.id AND l.status = 'sold' AND l.received_at IS NOT NULL AND l.counted = 1
+     WHERE u.verified = 1 AND u.suspended_at IS NULL GROUP BY u.house`).all() as { house: string; members: number; rehomed: number; given: number; cats: string | null }[];
   const byHouse = new Map(rows.map((r) => [r.house, r]));
   const names = [...HOUSES, ...rows.map((r) => r.house).filter((h) => !HOUSES.includes(h))];
   const list = names.map((house) => {

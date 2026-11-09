@@ -8,22 +8,25 @@ export function Thumb({ src, alt, label, className = "" }: { src: string | null;
   return (
     <div className={`flex h-full w-full flex-col items-center justify-center gap-1 ${className}`}>
       <span className="display text-[12px] uppercase tracking-[.1em] text-muted">{label ?? alt}</span>
-      <span className="text-[10.5px] uppercase tracking-[.08em] text-muted/60">No photo yet</span>
+      <span className="text-[10.5px] uppercase tracking-[.08em] text-muted">No photo yet</span>
     </div>
   );
 }
+
+const OVERLAY: Record<string, string> = { sold: "Rehomed", pending: "Reserved", review: "Being checked", removed: "Removed" };
+const tag = "bg-card px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[.08em] ring-1 ring-line";
 
 /** Product tile after the reference: the photo in a thin-bordered tile, then a small grey line and name + price below. */
 export function ListingCard({ l }: { l: Listing }) {
   const gone = l.status !== "available";
   return (
-    <Link href={`/listings/${l.id}`} data-listing className="group grid min-w-0 grid-cols-1 gap-2.5">
-      <div className="card lift relative aspect-[4/5] overflow-hidden">
+    <Link href={`/listings/${l.id}`} data-listing data-boosted={l.boosted ? "" : undefined} className="group grid min-w-0 grid-cols-1 gap-2.5">
+      <div className={`card lift relative aspect-[4/5] overflow-hidden ${l.boosted ? "border-accent" : ""}`}>
         <Thumb src={l.image} alt={l.title} label={categoryLabel(l.category)} />
-        {gone && <div className="absolute inset-0 flex items-center justify-center bg-bg/95 text-[11px] font-semibold uppercase tracking-[.14em] text-fg">{l.status === "sold" ? "Rehomed" : "Reserved"}</div>}
+        {gone && <div className="absolute inset-0 flex items-center justify-center bg-bg/95 text-[11px] font-semibold uppercase tracking-[.14em] text-fg">{OVERLAY[l.status] ?? l.status}</div>}
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-          {l.handoff === "fall" && <span className="bg-card px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[.08em] text-fg ring-1 ring-line">Fall handoff</span>}
-          {l.accepts_credits === 1 && l.price_cents > 0 && <span className="bg-card px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[.08em] text-accent ring-1 ring-line">⭐ Credits</span>}
+          {!!l.boosted && <span className={`${tag} text-accent`}>⭐ Boosted</span>}
+          {l.handoff === "fall" && <span className={`${tag} text-fg`}>Fall handoff</span>}
         </div>
         <span aria-hidden className="absolute bottom-2 left-1/2 flex h-6 w-6 -translate-x-1/2 items-center justify-center text-[16px] text-muted opacity-60 transition group-hover:opacity-100">+</span>
       </div>

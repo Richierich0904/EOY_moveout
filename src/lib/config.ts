@@ -4,12 +4,28 @@
 export const SCHOOL_NAME = process.env.SCHOOL_NAME ?? "Our School";
 export const APP_NAME = process.env.APP_NAME ?? "Le-SWAP";
 
+// The school's time zone. Weeks, months, draw deadlines and every date shown use it.
+export const SCHOOL_TZ = process.env.SCHOOL_TZ ?? "America/New_York";
+
+// ---------- launch safety ----------
+
+export const IS_PROD = process.env.NODE_ENV === "production";
+// DEMO_MODE=1 lets a production build run with demo data and on-screen codes. Never set it on the real site.
+export const DEMO_MODE = process.env.DEMO_MODE === "1";
+export const SMTP_URL = process.env.SMTP_URL ?? "";
+export const MAIL_FROM = process.env.MAIL_FROM ?? "";
+
 // Comma-separated list of email domains allowed to sign up, e.g. "students.school.edu,school.edu".
-// Empty means any email is allowed (handy for local development).
+// Empty means any email is allowed, which only works in development or demo mode.
 export const ALLOWED_EMAIL_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS ?? "")
   .split(",")
   .map((d) => d.trim().toLowerCase())
   .filter(Boolean);
+
+/** On the real site nobody can sign up until the school's email domain and a mail service are set. */
+export const SIGNUP_OPEN = !IS_PROD || DEMO_MODE || (SMTP_URL !== "" && ALLOWED_EMAIL_DOMAINS.length > 0);
+/** Codes are only ever shown on screen while developing or demoing, and only when no mail service is set. */
+export const SHOW_CODES_ON_SCREEN = SMTP_URL === "" && (!IS_PROD || DEMO_MODE);
 
 export const HOUSES = (process.env.HOUSES ?? "Main,Tippetts,Keil,Culberson,Fowle,South,Swank")
   .split(",")
@@ -46,7 +62,7 @@ export const HANDOFF = [
 ] as const;
 
 export const HANDOFF_SPOTS = (
-  process.env.HANDOFF_SPOTS ?? "Dining hall entrance,Library steps,Student center,My dorm"
+  process.env.HANDOFF_SPOTS ?? "Dining hall entrance,Library steps,Student center,Dorm common room"
 )
   .split(",")
   .map((s) => s.trim())
@@ -54,17 +70,49 @@ export const HANDOFF_SPOTS = (
 
 export const SESSION_DAYS = 30;
 
+// Sign-in safety.
+export const CODE_MINUTES = 15;        // how long an emailed code works
+export const CODE_ATTEMPTS = 5;        // wrong tries before the code is locked
+export const RESEND_SECONDS = 60;      // wait between "send a new code"
+export const LOGIN_ATTEMPTS = 10;      // failed log-ins per email...
+export const LOGIN_WINDOW_MINUTES = 15; // ...in this many minutes
+
+// Text limits.
+export const LIMITS = { title: 80, description: 2000, message: 1000, want: 1000, name: 60, course: 20, reason: 200 } as const;
+// How much one student can post.
+export const RATE = { messagesPer10Min: 30, newChatsPerDay: 15, listingsPerDay: 30, reportsPerDay: 20 } as const;
+export const MAX_PHOTOS = 6;
+
+// The adult students can go to. Shown on the help page and to suspended accounts.
+export const SAFETY_CONTACT_NAME = process.env.SAFETY_CONTACT_NAME ?? "";
+export const SAFETY_CONTACT_EMAIL = process.env.SAFETY_CONTACT_EMAIL ?? "";
+
+// Posts that mention any of these are held until an organiser has looked at them.
+export const BANNED_WORDS = (process.env.BANNED_WORDS ??
+  "vape,vapes,vaping,juul,nicotine,cigarette,cigarettes,tobacco,zyn,alcohol,beer,vodka,whiskey,liquor,wine,weed,marijuana,cannabis,edibles,thc,drugs,pills,adderall,xanax,ritalin,medication,prescription,knife,knives,gun,guns,firearm,weapon,weapons,ammo,fireworks,taser,pepper spray,fake id")
+  .split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+
+export const STAFF_NOTICE = `Organisers and school staff can read messages on ${APP_NAME}.`;
+
 // ---------- fun stuff ----------
 
-// Emails that get the /admin page (create draws, grant credits). Comma-separated.
+// Emails that get the organisers pages (reports, messages, draws, credits). Comma-separated.
 export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
   .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 
-// How many confirmed giveaways earn one lottery ticket.
+// How many confirmed giveaways earn one entry in the giveaway draw.
 export const GIVEAWAYS_PER_TICKET = Math.max(1, parseInt(process.env.GIVEAWAYS_PER_TICKET ?? "3", 10) || 3);
 
-// Credits are an in-app currency. 100 = one credit, shown as "⭐ 1". Sellers can opt in to accept them.
-export const CREDIT_NAME = process.env.CREDIT_NAME ?? "credits";
+// Credits are earned, never bought, and can't be sent to anyone or turned into money.
+// 100 = one credit, shown as "⭐ 1". Students spend them to boost a listing to the top of the shelves.
+export const BOOST_COST = 300;          // ⭐3 for one boost
+export const BOOST_DAYS = 3;            // how long a boost lasts
+export const CREDIT_PER_HANDOFF = 100;  // ⭐1 for every confirmed handoff that counts
+export const WELCOME_CREDITS = 300;     // enough for one boost, given when a student verifies
+
+// Fair play. A confirmed handoff only counts for points, entries and credits within these limits.
+export const PAIR_CAP_PER_MONTH = 2;    // counted handoffs between the same two students per month
+export const DAILY_COUNT_CAP = 5;       // counted handoffs per seller per day
 
 export const BADGES = [
   { slug: "giver", emoji: "🎁", label: "Giver", desc: "Gave away your first item" },

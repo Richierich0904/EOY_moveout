@@ -34,14 +34,14 @@ export function NavMenu({ sections, categories }: { sections: Item[]; categories
             <Link key={s.href} href={s.href} className="display text-[20px] uppercase leading-tight transition hover:text-accent">{s.label}{!!s.count && <span className="count ml-1">({s.count})</span>}</Link>
           ))}
         </div>
-        <div className="grid content-start gap-1.5">
+        {categories.length > 0 && <div className="grid content-start gap-1.5">
           <p className="eyebrow mb-2">Departments</p>
           {categories.map((c) => (
             <Link key={c.href} href={c.href} className="flex items-baseline justify-between gap-3 text-[13px] font-medium uppercase tracking-[.05em] transition hover:text-accent">
               {c.label}<span className="text-[11px] text-muted tabular-nums">{c.count ?? 0}</span>
             </Link>
           ))}
-        </div>
+        </div>}
       </div>
     </div>
   );

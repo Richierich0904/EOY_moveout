@@ -3,13 +3,15 @@ import { categoryLabel, SCHOOL_NAME } from "@/lib/config";
 import { getDb } from "@/lib/db";
 import { houseLeaderboard } from "@/lib/game";
 import { PageIntro } from "@/components/PageIntro";
+import { requireViewer } from "@/lib/auth";
 
 export const metadata = { title: "Impact" };
 
 const kg = (n: number) => (n < 10 ? n.toFixed(1) : String(Math.round(n)));
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
-export default function ImpactPage() {
+export default async function ImpactPage() {
+  await requireViewer();
   const s = impactStats();
   const members = (getDb().prepare("SELECT COUNT(*) c FROM users WHERE verified = 1").get() as { c: number }).c;
   const live = (getDb().prepare("SELECT COUNT(*) c FROM listings WHERE status = 'available'").get() as { c: number }).c;
@@ -48,14 +50,14 @@ export default function ImpactPage() {
           <div className="reveal grid gap-2">
             <p className="eyebrow">Dorm cup</p>
             <h2 className="text-[clamp(1.8rem,3.4vw,2.6rem)]">Items rehomed,<br />by dorm</h2>
-            <p className="sub">{lead}</p>
+            <p className="sub">{lead} Only handoffs the receiver confirmed count for the cup.</p>
           </div>
           <ol className="card reveal grid p-2 sm:p-4">
             {dorms.map((h) => {
               const top = h.rank === 1 && h.rehomed > 0;
               return (
                 <li key={h.house} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2 gap-y-2 border-b border-line px-3 py-4 last:border-b-0">
-                  <span className={`display row-span-2 text-[20px] tabular-nums ${top ? "text-accent" : h.rehomed ? "" : "text-muted/50"}`}>{h.rehomed ? h.rank : "–"}</span>
+                  <span className={`display row-span-2 text-[20px] tabular-nums ${top ? "text-accent" : h.rehomed ? "" : "text-muted"}`}>{h.rehomed ? h.rank : "–"}</span>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <span className="flex items-baseline gap-2">
                       <span className="display text-[18px] uppercase">{h.house}</span>

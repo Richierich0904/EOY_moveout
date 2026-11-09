@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { requireViewer } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { categoryLabel } from "@/lib/config";
 import { money, timeAgo } from "@/lib/format";
@@ -10,8 +9,7 @@ import { PageIntro } from "@/components/PageIntro";
 export const metadata = { title: "Alerts" };
 
 export default async function AlertsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login?next=/alerts");
+  const user = await requireViewer();
   const { saved } = await searchParams;
   const db = getDb();
   const searches = db.prepare("SELECT * FROM saved_searches WHERE user_id = ? ORDER BY created_at DESC").all(user.id) as
@@ -31,7 +29,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
             {notes.map((n) => (
               <li key={n.id}>
                 <Link href={n.link} className="relative block py-4 pl-9 pr-5 transition-colors hover:bg-bg">
-                  {!n.read && <span aria-label="Unread" className="absolute left-4 top-[22px] h-2 w-2 rounded-full bg-accent" />}
+                  {!n.read && <span className="absolute left-4 top-[22px] h-2 w-2 rounded-full bg-accent"><span className="sr-only">Unread</span></span>}
                   <span className="flex justify-between gap-3"><span className={n.read ? "font-medium" : "font-bold"}>{n.title}</span><span className="shrink-0 text-[12.5px] text-muted">{timeAgo(n.created_at)}</span></span>
                   <span className="block text-[14px] text-muted">{n.body}</span>
                 </Link>

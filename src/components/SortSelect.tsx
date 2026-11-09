@@ -9,7 +9,7 @@ export function SortSelect({ value }: { value: string }) {
       <span className="text-muted">Sort</span>
       <select value={value} aria-label="Sort listings"
         onChange={(e) => { const p = new URLSearchParams(sp.toString()); p.set("sort", e.target.value); router.push("/?" + p.toString() + "#browse", { scroll: false }); }}
-        className="cursor-pointer appearance-none bg-transparent pr-1 font-semibold uppercase outline-none">
+        className="cursor-pointer appearance-none bg-transparent pr-1 font-semibold uppercase">
         <option value="new">Newest</option>
         <option value="cheap">Less to more</option>
         <option value="pricey">More to less</option>

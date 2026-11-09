@@ -1,18 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+// The typeface is served from this site, so students' browsers never call another company to load it.
+import "@fontsource-variable/archivo/standard.css";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { Motion } from "@/components/Motion";
-import { APP_NAME, HANDOFF_SPOTS, SCHOOL_NAME } from "@/lib/config";
-import { getCurrentUser } from "@/lib/auth";
+import { APP_NAME, DEMO_MODE, HANDOFF_SPOTS, SCHOOL_NAME } from "@/lib/config";
+import { getCurrentUser, isMember } from "@/lib/auth";
 import { unreadCounts } from "@/lib/social";
 import { creditBalance } from "@/lib/game";
 import { categoryShelves } from "@/lib/listings";
-import { settleRankings } from "@/lib/progress";
+import { housekeeping } from "@/lib/housekeeping";
 
 export const metadata: Metadata = {
   title: { default: `${APP_NAME} · ${SCHOOL_NAME}`, template: `%s · ${APP_NAME}` },
   description: `Buy, sell and give away stuff with other students at ${SCHOOL_NAME}. Nothing ships, nothing gets thrown out.`,
+  robots: { index: false, follow: false },
 };
 export const viewport: Viewport = {
   viewportFit: "cover",
@@ -22,22 +25,18 @@ export const viewport: Viewport = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  settleRankings();
+  housekeeping();
   const user = await getCurrentUser();
-  const counts = user ? unreadCounts(user.id) : { notifications: 0, messages: 0 };
-  const categoryCounts = Object.fromEntries(categoryShelves().map((s) => [s.category, s.count]));
+  const member = isMember(user) ? user : null;
+  const counts = member ? unreadCounts(member.id) : { notifications: 0, messages: 0 };
+  const categoryCounts = member ? Object.fromEntries(categoryShelves().map((s) => [s.category, s.count])) : {};
   const gutter = "pl-[max(16px,env(safe-area-inset-left,0px))] pr-[max(16px,env(safe-area-inset-right,0px))] sm:px-8";
   const footLink = "text-[13px] uppercase tracking-[.05em] text-muted transition hover:text-fg";
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" />
-      </head>
       <body className="min-h-screen">
-        <Nav appName={APP_NAME} user={user ? { name: user.name, credits: creditBalance(user.id), isAdmin: user.is_admin, avatar: user.avatar } : null} counts={counts} categoryCounts={categoryCounts} />
+        {DEMO_MODE && <p className="bg-fg px-4 py-1.5 text-center text-[11.5px] font-semibold uppercase tracking-[.08em] text-bg">Demo mode · sign-up is not locked to the school · do not use with real students</p>}
+        <Nav appName={APP_NAME} user={member ? { name: member.name, credits: creditBalance(member.id), isAdmin: member.is_admin, avatar: member.avatar } : null} pending={!!user && !member} counts={counts} categoryCounts={categoryCounts} />
         <Motion />
         <main id="main" className={`mx-auto w-full max-w-[1280px] ${gutter} pb-20 pt-4 sm:pt-8`}>{children}</main>
         <footer className="border-t border-line">
@@ -49,16 +48,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 {HANDOFF_SPOTS.map((s) => <span key={s} className="text-[13px] uppercase tracking-[.05em] text-muted">{s}</span>)}
               </div>
               <div className="grid content-start gap-2">
-                <h3 className="mb-1">How it works</h3>
-                {["Meet in public on campus", "Pay cash or any app", "No fees, no shipping", "Leaving? Fall handoff"].map((s) => <span key={s} className="text-[13px] uppercase tracking-[.05em] text-muted">{s}</span>)}
+                <h3 className="mb-1">Stay safe</h3>
+                <Link href="/rules" className={footLink}>Rules &amp; what&apos;s not allowed</Link>
+                <Link href="/help" className={footLink}>Help &amp; safety</Link>
+                <Link href="/privacy" className={footLink}>Privacy</Link>
+                <span className="text-[13px] uppercase tracking-[.05em] text-muted">Meet in public on campus</span>
               </div>
               <div className="grid content-start gap-2">
                 <h3 className="mb-1">Around {APP_NAME}</h3>
-                <Link href="/wanted" className={footLink}>Wanted board</Link>
-                <Link href="/lottery" className={footLink}>Giveaway draw</Link>
-                <Link href="/rankings" className={footLink}>Rankings &amp; prizes</Link>
-                <Link href="/impact" className={footLink}>Impact &amp; dorm cup</Link>
-                <Link href="/listings/new?mode=bulk" className={footLink}>Clear out your room</Link>
+                {member ? (
+                  <>
+                    <Link href="/wanted" className={footLink}>Wanted board</Link>
+                    <Link href="/draw" className={footLink}>Giveaway draw</Link>
+                    <Link href="/rankings" className={footLink}>Rankings &amp; prizes</Link>
+                    <Link href="/impact" className={footLink}>Impact &amp; dorm cup</Link>
+                    <Link href="/listings/new?mode=bulk" className={footLink}>Clear out your room</Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/signup" className={footLink}>Join with school email</Link>
+                    <Link href="/login" className={footLink}>Log in</Link>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap justify-between gap-3 border-t border-line pt-5 text-[11.5px] uppercase tracking-[.08em] text-muted">

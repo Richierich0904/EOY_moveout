@@ -1,17 +1,21 @@
 import { getDb } from "./db";
-import { listingMatchesSearch } from "./listings";
+import { likePattern, listingMatchesSearch } from "./listings";
 
 export type Want = {
   id: number; user_id: number; title: string; description: string; category: string;
-  max_price_cents: number | null; status: "open" | "fulfilled"; created_at: string;
+  max_price_cents: number | null; status: "open" | "fulfilled" | "review" | "removed"; created_at: string; removed_reason: string | null;
   user_name: string; user_house: string; user_grad_year: number; user_avatar: string | null;
 };
 
-export function listWants(opts: { userId?: number; status?: "open" | "all"; q?: string } = {}): Want[] {
+export function listWants(opts: { userId?: number; status?: "open" | "all"; q?: string; viewerId?: number } = {}): Want[] {
   const where: string[] = []; const params: unknown[] = [];
-  if (opts.status !== "all") where.push("w.status = 'open'");
+  if (opts.status !== "all") where.push("w.status = 'open' AND u.suspended_at IS NULL");
   if (opts.userId) { where.push("w.user_id = ?"); params.push(opts.userId); }
-  if (opts.q) { where.push("(w.title LIKE ? OR w.description LIKE ?)"); params.push(`%${opts.q}%`, `%${opts.q}%`); }
+  if (opts.viewerId) {
+    where.push("w.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ? UNION SELECT blocker_id FROM blocks WHERE blocked_id = ?)");
+    params.push(opts.viewerId, opts.viewerId);
+  }
+  if (opts.q?.trim()) { const like = likePattern(opts.q); where.push("(w.title LIKE ? ESCAPE '\\' OR w.description LIKE ? ESCAPE '\\')"); params.push(like, like); }
   return getDb().prepare(
     `SELECT w.*, u.name AS user_name, u.house AS user_house, u.grad_year AS user_grad_year, u.avatar AS user_avatar
      FROM wants w JOIN users u ON u.id = w.user_id ${where.length ? "WHERE " + where.join(" AND ") : ""}
@@ -28,8 +32,12 @@ export function getWant(id: number): Want | null {
 
 export function notify(userId: number, title: string, body: string, link: string) {
   getDb().prepare("INSERT INTO notifications (user_id, title, body, link) VALUES (?, ?, ?, ?)").run(userId, title, body, link);
-  // Hook for email/push: wire an SMTP or push provider here.
-  if (process.env.NODE_ENV !== "production") console.log(`[notify] user ${userId}: ${title} — ${body} (${link})`);
+}
+
+/** People who blocked this student, or were blocked by them. */
+function blockedWith(userId: number): Set<number> {
+  const rows = getDb().prepare("SELECT blocked_id AS id FROM blocks WHERE blocker_id = ? UNION SELECT blocker_id AS id FROM blocks WHERE blocked_id = ?").all(userId, userId) as { id: number }[];
+  return new Set(rows.map((r) => r.id));
 }
 
 export function unreadCounts(userId: number) {
@@ -48,7 +56,8 @@ export function fanOutNewListing(listingId: number) {
     id: number; user_id: number; title: string; description: string; category: string; price_cents: number; course_code: string | null;
   };
   const link = `/listings/${l.id}`;
-  const alerted = new Set<number>();
+  // Start with everyone who shouldn't hear about this seller, so they are skipped below.
+  const alerted = blockedWith(l.user_id);
 
   const searches = db.prepare("SELECT * FROM saved_searches WHERE user_id != ?").all(l.user_id) as {
     id: number; user_id: number; query: string; category: string | null; free_only: number; max_price_cents: number | null;
@@ -105,6 +114,13 @@ export function getThread(threadId: number, userId: number): Thread | null {
      LEFT JOIN listings l ON l.id = t.listing_id
      LEFT JOIN wants w ON w.id = t.want_id
      WHERE t.id = ? AND (t.user_a = ? OR t.user_b = ?)`).get(userId, threadId, userId, userId) as Thread | undefined) ?? null;
+}
+
+/** Is there already a conversation between these two about this post? */
+export function threadExists(opts: { listingId?: number; wantId?: number; me: number; other: number }) {
+  const [a, b] = opts.me < opts.other ? [opts.me, opts.other] : [opts.other, opts.me];
+  return !!getDb().prepare("SELECT 1 FROM threads WHERE COALESCE(listing_id,0) = ? AND COALESCE(want_id,0) = ? AND user_a = ? AND user_b = ?")
+    .get(opts.listingId ?? 0, opts.wantId ?? 0, a, b);
 }
 
 export function getOrCreateThread(opts: { listingId?: number; wantId?: number; me: number; other: number }) {

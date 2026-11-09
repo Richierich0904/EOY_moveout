@@ -40,7 +40,7 @@ const users = [
   ["sofia@demo.school", "Sofia Rossi", "Keil", 2026], ["jamal@demo.school", "Jamal Hart", "Fowle", 2028],
   ["aiko@demo.school", "Aiko Tanaka", "Swank", 2029],
 ] as const;
-const ins = db.prepare("INSERT INTO users (email, name, house, grad_year, password_hash, verified) VALUES (?, ?, ?, ?, ?, 1)");
+const ins = db.prepare("INSERT INTO users (email, name, house, grad_year, password_hash, verified, rules_accepted_at) VALUES (?, ?, ?, ?, ?, 1, datetime('now'))");
 const uid = users.map((u) => Number(ins.run(u[0], u[1], u[2], u[3], hash).lastInsertRowid));
 
 type L = [user: number, title: string, desc: string, cat: string, price: number, cond: string, course: string | null, handoff: "now" | "fall", status: "available" | "sold", daysAgo: number];
@@ -56,7 +56,7 @@ const listings: L[] = [
   [3, "Lacrosse stick (STX Stallion)", "Restrung this season. Moving to rowing.", "sports", 4500, "Good", null, "now", "available", 6],
   [0, "Beats Solo3 headphones", "Battery still lasts ages. Includes case.", "electronics", 5000, "Good", null, "now", "available", 0],
   [4, "Yamaha acoustic guitar + bag", "Starter guitar, a few scratches. Comes with picks and a clip-on tuner.", "music", 6000, "Fair", null, "fall", "available", 7],
-  [1, "Full-length mirror", "Plastic frame, no cracks. Pickup from South.", "dorm", 500, "Good", null, "now", "available", 3],
+  [1, "Full-length mirror", "Plastic frame, no cracks. Can bring it to the student center.", "dorm", 500, "Good", null, "now", "available", 3],
   [2, "Noise-cancelling earbuds (Anker)", "Lost the left ear tip, otherwise perfect.", "electronics", 1500, "Fair", null, "now", "available", 8],
   [3, "Physics: Principles with Applications (Giancoli)", "Needed for PHYS 200. Good condition.", "textbooks", 2000, "Good", "PHYS 200", "now", "available", 9],
   // already rehomed, so the impact page and price suggestions have data
@@ -96,23 +96,40 @@ insW.run(uid[3], "MATH 301 textbook", "Stewart calculus, any recent edition.", "
 insW.run(uid[1], "Bike, any condition", "Just needs to roll. Will fix it up.", "sports", null);
 insW.run(uid[2], "Standing desk lamp", "", "dorm", 1500);
 
-// Confirmed giveaways (so the draw has entrants) and a running draw.
+// Confirmed handoffs (so the draw has entrants and the rankings have points) and a running draw.
 const soldRows = db.prepare("SELECT id, user_id FROM listings WHERE status = 'sold' ORDER BY id").all() as { id: number; user_id: number }[];
 soldRows.forEach((l, i) => {
   const receiver = uid[(uid.indexOf(l.user_id) + 1) % uid.length];
-  // Most receivers have confirmed; every 4th handoff is still waiting, to show the "nudge" state.
+  // Most receivers have confirmed; every 4th handoff is still waiting, to show the "waiting to be confirmed" state.
   db.prepare("UPDATE listings SET buyer_id = ?, received_at = CASE WHEN ? % 4 != 3 THEN closed_at ELSE NULL END WHERE id = ?").run(receiver, i, l.id);
 });
 db.prepare("UPDATE listings SET price_cents = 0 WHERE status = 'sold' AND user_id = ?").run(uid[1]); // Leo gave everything away
 db.prepare("UPDATE listings SET price_cents = 0 WHERE id = (SELECT MIN(id) FROM listings WHERE status = 'sold' AND user_id = ?)").run(uid[3]);
 const draw = db.prepare("INSERT INTO draws (title, description, starts_at, ends_at) VALUES (?, ?, datetime('now','-90 days'), datetime('now','+14 days'))")
-  .run("Autumn giveaway draw", "Every 3 items you give away earns a ticket. Drawn at the last dorm meeting of term.");
+  .run("Autumn giveaway draw", "Every 3 items you give away earns an entry. Winners announced at the last dorm meeting of term.");
 const insP = db.prepare("INSERT INTO prizes (draw_id, title, credit_cents, position) VALUES (?, ?, ?, ?)");
 insP.run(draw.lastInsertRowid, "$25 school store voucher", 0, 0);
-insP.run(draw.lastInsertRowid, "20 credits to spend on the app", 2000, 1);
+insP.run(draw.lastInsertRowid, "10 credits, enough for three boosts", 1000, 1);
 insP.run(draw.lastInsertRowid, "Skip-the-queue pass for move-out storage", 0, 2);
-db.prepare("INSERT INTO credit_transactions (user_id, delta, reason) VALUES (?, ?, ?)").run(uid[4], 1500, "Welcome bonus from the organisers");
-db.prepare("UPDATE listings SET accepts_credits = 1 WHERE status = 'available' AND price_cents BETWEEN 500 AND 1500").run();
+// Credits: everyone starts with enough for one boost, plus one for each confirmed handoff so far.
+const credit = db.prepare("INSERT INTO credit_transactions (user_id, delta, reason) VALUES (?, ?, ?)");
+for (const id of uid) {
+  credit.run(id, 300, "Welcome gift: enough for your first boost");
+  const n = (db.prepare("SELECT COUNT(*) c FROM listings WHERE user_id = ? AND status = 'sold' AND received_at IS NOT NULL").get(id) as { c: number }).c;
+  if (n > 0) credit.run(id, n * 100, `${n} confirmed handoff${n === 1 ? "" : "s"}`);
+}
+// Sofia is boosting her bookshelf, so the shelves show what a boost looks like.
+const boosted = db.prepare("SELECT id, title FROM listings WHERE status = 'available' AND user_id = ? AND title LIKE 'Bookshelf%'").get(uid[2]) as { id: number; title: string };
+db.prepare("UPDATE listings SET boosted_until = datetime('now', '+3 days') WHERE id = ?").run(boosted.id);
+db.prepare("INSERT INTO credit_transactions (user_id, delta, reason, listing_id) VALUES (?, ?, ?, ?)").run(uid[2], -300, `Boosted "${boosted.title}" for 3 days`, boosted.id);
+
+// A couple of conversations, so messages and "who did it go to" have something in them.
+const thread = db.prepare("INSERT INTO threads (listing_id, user_a, user_b) VALUES (?, ?, ?)");
+const msg = db.prepare("INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)");
+const fridge = db.prepare("SELECT id FROM listings WHERE status = 'available' AND title LIKE 'Mini fridge, 1.7%'").get() as { id: number };
+const t1 = Number(thread.run(fridge.id, uid[0], uid[4]).lastInsertRowid);
+msg.run(t1, uid[4], "Hi Maya! Is the fridge still available? I could collect it at move-in.");
+msg.run(t1, uid[0], "Yes, it's yours if you want it. Dining hall entrance on move-in day?");
 
 db.prepare("INSERT INTO saved_searches (user_id, query, category, free_only, max_price_cents) VALUES (?, ?, ?, ?, ?)").run(uid[4], "fridge", null, 0, null);
 db.prepare("INSERT INTO saved_searches (user_id, query, category, free_only, max_price_cents) VALUES (?, ?, ?, ?, ?)").run(uid[3], "", "textbooks", 0, 2500);
@@ -122,5 +139,5 @@ const newest = db.prepare("SELECT id FROM listings WHERE status = 'available' OR
 fanOutNewListing(newest.id);
 
 console.log(`Seeded ${users.length} users, ${listings.length} listings, 4 wanted posts.`);
-console.log("Set ADMIN_EMAILS=maya@demo.school to try the organisers page.");
+console.log("Set ADMIN_EMAILS=maya@demo.school to try the organisers pages.");
 console.log("Log in as any of: " + users.map((u) => u[0]).join(", ") + "  (password: password123)");

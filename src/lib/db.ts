@@ -134,6 +134,46 @@ CREATE TABLE IF NOT EXISTS awards (
   UNIQUE (period, period_key, place, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_awards_user ON awards(user_id);
+CREATE TABLE IF NOT EXISTS settled_periods (
+  period TEXT NOT NULL,
+  period_key TEXT NOT NULL,
+  PRIMARY KEY (period, period_key)
+);
+CREATE TABLE IF NOT EXISTS rate_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rate_events ON rate_events(key, created_at);
+CREATE TABLE IF NOT EXISTS reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL,
+  target_id INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  details TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'open',
+  resolved_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  resolution TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  resolved_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at DESC);
+CREATE TABLE IF NOT EXISTS blocks (
+  blocker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (blocker_id, blocked_id)
+);
+CREATE TABLE IF NOT EXISTS admin_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  admin_name TEXT NOT NULL DEFAULT '',
+  action TEXT NOT NULL,
+  target TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 // Columns added after the first release. Each ALTER is skipped if the column already exists.
@@ -142,6 +182,23 @@ const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   ["listings", "credit_paid_cents", "INTEGER NOT NULL DEFAULT 0"],
   ["listings", "received_at", "TEXT"],
   ["users", "avatar", "TEXT"],
+  // sign-in safety
+  ["users", "verify_expires_at", "TEXT"],
+  ["users", "verify_attempts", "INTEGER NOT NULL DEFAULT 0"],
+  ["users", "verify_sent_at", "TEXT"],
+  ["users", "reset_code", "TEXT"],
+  ["users", "reset_expires_at", "TEXT"],
+  ["users", "reset_attempts", "INTEGER NOT NULL DEFAULT 0"],
+  // moderation
+  ["users", "suspended_at", "TEXT"],
+  ["users", "suspended_reason", "TEXT"],
+  ["users", "rules_accepted_at", "TEXT"],
+  ["users", "hide_from_rankings", "INTEGER NOT NULL DEFAULT 0"],
+  ["listings", "removed_reason", "TEXT"],
+  ["wants", "removed_reason", "TEXT"],
+  // boosts and fair play
+  ["listings", "boosted_until", "TEXT"],
+  ["listings", "counted", "INTEGER NOT NULL DEFAULT 1"],
 ];
 
 declare global {
@@ -161,6 +218,9 @@ export function getDb(): Database.Database {
   }
   // Indexes on migrated columns can only be created once the columns exist.
   db.exec("CREATE INDEX IF NOT EXISTS idx_listings_received ON listings(received_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_listings_buyer ON listings(buyer_id)");
+  // Older sessions stored their expiry in ISO format, which SQLite compares wrongly against datetime('now').
+  db.exec("UPDATE sessions SET expires_at = replace(substr(expires_at, 1, 19), 'T', ' ') WHERE expires_at LIKE '%T%'");
   global.__db = db;
   return db;
 }

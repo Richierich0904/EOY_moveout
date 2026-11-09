@@ -5,19 +5,22 @@ import { SortSelect } from "@/components/SortSelect";
 import { HeroPair } from "@/components/HeroPair";
 import { Shelves } from "@/components/Shelves";
 import { Icon } from "@/components/Icons";
-import { CATEGORIES, SCHOOL_NAME, categoryLabel } from "@/lib/config";
+import { Landing } from "@/components/Landing";
+import { BOOST_COST, CATEGORIES, GIVEAWAYS_PER_TICKET, SCHOOL_NAME, WELCOME_CREDITS, categoryLabel } from "@/lib/config";
 import { categoryShelves, facetCounts, heroImages, searchListings } from "@/lib/listings";
 import { listWants } from "@/lib/social";
 import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { saveSearch } from "@/actions/social";
 import { money } from "@/lib/format";
 import { currentDraw, prizesFor } from "@/lib/game";
+import { parseSql, zonedParts } from "@/lib/time";
 
-type SP = { q?: string; category?: string; free?: string; fall?: string; sort?: string; max?: string; min?: string };
+type SP = { q?: string; category?: string; free?: string; fall?: string; sort?: string; max?: string; min?: string; welcome?: string; deleted?: string };
 
 function qs(sp: SP, patch: Partial<SP>) {
   const p = new URLSearchParams();
-  for (const [k, v] of Object.entries({ ...sp, ...patch })) if (v) p.set(k, v);
+  for (const [k, v] of Object.entries({ ...sp, ...patch, welcome: "", deleted: "" })) if (v) p.set(k, v);
   const s = p.toString();
   return s ? `/?${s}#browse` : "/#browse";
 }
@@ -26,30 +29,37 @@ const PRICES: { label: string; min?: string; max?: string; free?: string }[] = [
   { label: "Free", free: "1" }, { label: "<$10", max: "9.99" }, { label: "$10–25", min: "10", max: "25" }, { label: "$25–50", min: "25", max: "50" }, { label: "$50+", min: "50" },
 ];
 
-function season(d = new Date()) {
-  const m = d.getMonth(); const y = d.getFullYear();
+function season() {
+  const { m, y } = zonedParts();
   return `${m <= 4 ? "Spring" : m <= 7 ? "Summer" : m <= 10 ? "Fall" : "Winter"} ${y}`;
 }
-function schoolYear(d = new Date()) {
-  const y = d.getFullYear() % 100; const start = d.getMonth() >= 7 ? y : y - 1;
+function schoolYear() {
+  const p = zonedParts(); const y = p.y % 100; const start = p.m >= 7 ? y : y - 1;
   return `${String(start).padStart(2, "0")}–${String(start + 1).padStart(2, "0")}`;
 }
-const isThisWeek = (iso: string) => Date.now() - new Date(iso.replace(" ", "T") + "Z").getTime() < 7 * 86400_000;
+const isThisWeek = (iso: string) => Date.now() - parseSql(iso).getTime() < 7 * 86400_000;
+const cents = (v?: string) => { const n = v ? Math.round(parseFloat(v) * 100) : NaN; return Number.isFinite(n) ? n : undefined; };
 
 export default async function Home({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const user = await getCurrentUser();
-  const sort = (sp.sort as "new" | "cheap" | "pricey") ?? "new";
+  // Visitors see a welcome page with no student information on it.
+  if (!user) return <Landing pending={false} note={sp.deleted ? "Your account and everything on it has been deleted." : undefined} />;
+  if (user.suspended_at) redirect("/suspended");
+  if (!user.verified) return <Landing pending />;
+  if (!user.rules_accepted_at) redirect("/rules?accept=1");
+
+  const sort = (["new", "cheap", "pricey"].includes(sp.sort ?? "") ? sp.sort : "new") as "new" | "cheap" | "pricey";
   const listings = searchListings({
-    q: sp.q, category: sp.category, free: sp.free === "1", fall: sp.fall === "1", sort,
-    maxPrice: sp.max ? Math.round(parseFloat(sp.max) * 100) : undefined,
-    minPrice: sp.min ? Math.round(parseFloat(sp.min) * 100) : undefined,
+    q: sp.q, category: sp.category, free: sp.free === "1", fall: sp.fall === "1", sort, viewerId: user.id,
+    maxPrice: cents(sp.max), minPrice: cents(sp.min),
   });
   const filtering = !!(sp.q || sp.category || sp.free || sp.fall || sp.max || sp.min);
-  const newest = filtering ? [] : searchListings({ limit: 12 });
-  const thisWeek = newest.filter((l) => isThisWeek(l.created_at));
+  const newest = filtering ? [] : searchListings({ limit: 12, viewerId: user.id });
+  // Boosted listings always make the front row, whatever their age.
+  const thisWeek = newest.filter((l) => l.boosted || isThisWeek(l.created_at));
   const row = thisWeek.length >= 4 ? thisWeek : newest.slice(0, 8);
-  const wants = filtering ? [] : listWants().slice(0, 4);
+  const wants = filtering ? [] : listWants({ viewerId: user.id }).slice(0, 4);
   const draw = filtering ? null : currentDraw();
   const topPrize = draw ? prizesFor(draw.id)[0] : null;
   const counts = new Map(categoryShelves().map((s) => [s.category, s.count]));
@@ -62,15 +72,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       <section className="grid gap-3">
         <h3>Price</h3>
         <div className="flex flex-wrap gap-1.5">
-          {PRICES.map((r) => <Link key={r.label} href={priceOn(r) ? qs(sp, { free: "", min: "", max: "" }) : qs(sp, { free: r.free ?? "", min: r.min ?? "", max: r.max ?? "" })} className={priceOn(r) ? "chip-on" : "chip"}>{r.label}</Link>)}
+          {PRICES.map((r) => <Link key={r.label} aria-current={priceOn(r) ? "true" : undefined} href={priceOn(r) ? qs(sp, { free: "", min: "", max: "" }) : qs(sp, { free: r.free ?? "", min: r.min ?? "", max: r.max ?? "" })} className={priceOn(r) ? "chip-on" : "chip"}>{r.label}</Link>)}
         </div>
       </section>
       <section className="grid gap-2.5 border-t border-line pt-5">
         <h3>Availability</h3>
         {[{ label: "Fall handoff", on: sp.fall === "1", href: qs(sp, { fall: sp.fall ? "" : "1" }), n: facets.fall }, { label: "Free to a good home", on: sp.free === "1", href: qs(sp, { free: sp.free ? "" : "1", min: "", max: "" }), n: facets.free }].map((f) => (
-          <Link key={f.label} href={f.href} className="flex items-center gap-2.5 text-[12.5px] tracking-[.02em]">
+          <Link key={f.label} href={f.href} aria-current={f.on ? "true" : undefined} className="flex items-center gap-2.5 text-[12.5px] tracking-[.02em]">
             <span aria-hidden className={`flex h-4 w-4 items-center justify-center border ${f.on ? "border-fg bg-fg text-bg" : "border-line bg-card"}`}>{f.on && <svg viewBox="0 0 12 12" width="10" height="10"><path d="M2.5 6.2l2.2 2.2 4.8-5" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>}</span>
-            {f.label} <span className="font-semibold text-accent tabular-nums">({f.n})</span>
+            {f.label}<span className="sr-only">{f.on ? ", on" : ", off"}</span> <span className="font-semibold text-accent tabular-nums">({f.n})</span>
           </Link>
         ))}
       </section>
@@ -79,9 +89,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
         {CATEGORIES.map((c) => {
           const on = sp.category === c.slug;
           const n = counts.get(c.slug) ?? 0;
-          if (n === 0 && !on) return <span key={c.slug} className="flex items-center justify-between border-b border-line py-2.5 text-[12.5px] tracking-[.02em] text-muted/60"><span>{c.label} <span className="tabular-nums">(0)</span></span></span>;
+          if (n === 0 && !on) return <span key={c.slug} className="flex items-center justify-between border-b border-line py-2.5 text-[12.5px] tracking-[.02em] text-muted"><span>{c.label} <span className="tabular-nums">(0)</span></span></span>;
           return (
-            <Link key={c.slug} href={qs(sp, { category: on ? "" : c.slug })} className={`flex items-center justify-between border-b border-line py-2.5 text-[12.5px] tracking-[.02em] transition hover:text-accent ${on ? "font-bold" : ""}`}>
+            <Link key={c.slug} href={qs(sp, { category: on ? "" : c.slug })} aria-current={on ? "true" : undefined} className={`flex items-center justify-between border-b border-line py-2.5 text-[12.5px] tracking-[.02em] transition hover:text-accent ${on ? "font-bold" : ""}`}>
               <span>{c.label} <span className="font-semibold text-accent tabular-nums">({n})</span></span><Icon name="right" size={13} />
             </Link>
           );
@@ -95,13 +105,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
       {!filtering && (
         <section className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-12">
           <div className="rise flex flex-col gap-8">
+            {sp.welcome && <p className="border border-fg p-3.5 text-[13.5px]" data-welcome><b className="font-semibold">Welcome to the swap.</b> {WELCOME_CREDITS > 0 ? `You start with ⭐ ${WELCOME_CREDITS / 100} credits, enough to boost ${WELCOME_CREDITS >= BOOST_COST * 2 ? "a couple of listings" : "one listing"} to the top of the shelves. ` : ""}Have a look at the <Link href="/rules" className="a-link">rules</Link> and the <Link href="/help" className="a-link">safety tips</Link>.</p>}
             <nav aria-label="Departments" className="hidden gap-0.5 lg:grid">
               {CATEGORIES.slice(0, 5).map((c) => <Link key={c.slug} href={qs({}, { category: c.slug })} className="w-fit text-[12px] font-medium uppercase tracking-[.08em] transition hover:text-accent">{c.label}</Link>)}
             </nav>
             <form action="/" role="search" className="relative max-w-sm">
               <label htmlFor="home-q" className="sr-only">Search</label>
               <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
-              <input id="home-q" name="q" placeholder="Search" className="input pl-10 text-right" />
+              <input id="home-q" name="q" maxLength={80} placeholder="Search" className="input pl-10 text-right" />
             </form>
             <div className="grid gap-3 lg:mt-auto">
               <h1 className="text-[clamp(2.6rem,6vw,4.4rem)]">End of year swap</h1>
@@ -109,17 +120,16 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Link href="#browse" className="btn-ghost h-12 min-w-[200px] justify-between">Go to the shelves <Icon name="arrow" size={18} stroke={1.6} /></Link>
-              {!user && <Link href="/signup" className="btn-primary h-12">Join with school email</Link>}
             </div>
           </div>
-          <HeroPair pics={heroImages(6)} />
+          <HeroPair pics={heroImages(6, user.id)} />
         </section>
       )}
 
       {draw && (
-        <Link href="/lottery" className="reveal group flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-fg py-4 transition hover:bg-bg-deep">
+        <Link href="/draw" className="reveal group flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-fg py-4 transition hover:bg-bg-deep">
           <span className="display text-[13px] uppercase tracking-[.04em]">Giveaway draw</span>
-          <span className="text-[13.5px]"><b className="font-semibold">{draw.title}.</b> Give away 3 things, get a ticket.{topPrize ? ` First prize: ${topPrize.title}.` : ""}</span>
+          <span className="text-[13.5px]"><b className="font-semibold">{draw.title}.</b> Give away {GIVEAWAYS_PER_TICKET} thing{GIVEAWAYS_PER_TICKET === 1 ? "" : "s"}, get an entry.{topPrize ? ` First prize: ${topPrize.title}.` : ""}</span>
           <span className="more ml-auto">See prizes</span>
         </Link>
       )}
@@ -147,11 +157,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               <form action="/" role="search" className="relative">
                 <label htmlFor="browse-q" className="sr-only">Search</label>
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
-                <input id="browse-q" name="q" defaultValue={sp.q} placeholder="Search" className="input pl-10 text-right" />
+                <input id="browse-q" name="q" defaultValue={sp.q} maxLength={80} placeholder="Search" className="input pl-10 text-right" />
               </form>
               <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
-                <Link href={qs(sp, { category: "", fall: "", free: "", min: "", max: "" })} className={!sp.category && !sp.fall && !sp.free && !sp.min && !sp.max ? "chip-on" : "chip"}>All</Link>
-                {CATEGORIES.slice(0, 9).map((c) => <Link key={c.slug} href={qs(sp, { category: sp.category === c.slug ? "" : c.slug })} className={sp.category === c.slug ? "chip-on truncate" : "chip truncate"}><span className="sm:hidden">{c.label.split(" ")[0]}</span><span className="hidden sm:inline">{c.label}</span></Link>)}
+                <Link href={qs(sp, { category: "", fall: "", free: "", min: "", max: "" })} aria-current={!sp.category && !sp.fall && !sp.free && !sp.min && !sp.max ? "true" : undefined} className={!sp.category && !sp.fall && !sp.free && !sp.min && !sp.max ? "chip-on" : "chip"}>All</Link>
+                {CATEGORIES.slice(0, 9).map((c) => <Link key={c.slug} href={qs(sp, { category: sp.category === c.slug ? "" : c.slug })} aria-current={sp.category === c.slug ? "true" : undefined} className={sp.category === c.slug ? "chip-on truncate" : "chip truncate"}><span className="sm:hidden">{c.label.split(" ")[0]}</span><span className="hidden sm:inline">{c.label}</span></Link>)}
               </div>
             </div>
           </div>
@@ -185,7 +195,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<SP>
               </details>
               <span className="whitespace-nowrap text-[12px] uppercase tracking-[.08em] text-muted">{listings.length} {listings.length === 1 ? "item" : "items"}</span>
               <span className="ml-auto flex items-center gap-2">
-                {user && filtering && (
+                {filtering && (
                   <form action={saveSearch}>
                     <input type="hidden" name="q" value={sp.q ?? ""} /><input type="hidden" name="category" value={sp.category ?? ""} />
                     {sp.free && <input type="hidden" name="free" value="1" />}{sp.max && <input type="hidden" name="max" value={sp.max} />}

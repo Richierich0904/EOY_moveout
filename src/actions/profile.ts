@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { saveImages } from "@/lib/upload";
+import { deleteImages, saveImages } from "@/lib/upload";
 import type { FormState } from "./auth";
 
-/** Set or replace the signed-in student's profile photo. */
+/** Set or replace the signed-in student's profile photo. The old file is deleted. */
 export async function updateAvatar(_prev: FormState, fd: FormData): Promise<FormState> {
   let user;
   try { user = await requireUser(); } catch (e) { return { error: (e as Error).message }; }
@@ -15,6 +15,7 @@ export async function updateAvatar(_prev: FormState, fd: FormData): Promise<Form
   let saved: string[];
   try { saved = await saveImages([file]); } catch (e) { return { error: (e as Error).message }; }
   getDb().prepare("UPDATE users SET avatar = ? WHERE id = ?").run(saved[0], user.id);
+  await deleteImages([user.avatar]);
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -22,5 +23,6 @@ export async function updateAvatar(_prev: FormState, fd: FormData): Promise<Form
 export async function removeAvatar() {
   const user = await requireUser();
   getDb().prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
+  await deleteImages([user.avatar]);
   revalidatePath("/", "layout");
 }

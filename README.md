@@ -2,44 +2,78 @@
 
 Buy, sell and give away stuff with other students. Nothing ships, nothing gets thrown out in June.
 
-Built to beat a generic Depop clone on the things only a campus marketplace can do:
+It is built for a school, which means it is built for minors. Only verified students can see anything, organisers can moderate everything, and the game side rewards real handoffs rather than clever tricks.
+
+## What it does
 
 | Feature | Why it matters here |
 |---|---|
-| **School-email sign-up** with real name, house and class year | Trust is free when everyone is a verified student. No anonymous usernames. |
+| **School-email sign-up** with real name, dorm and class year | Everyone is a verified student. A code is emailed to the school address and expires after 15 minutes. |
+| **Students only** | Visitors see a welcome page with no student information. Listings, profiles, rankings and photos all need a login. Search engines are told to stay out. |
 | **Free pile** | Most end-of-year stuff is worth $0. Capturing it is what makes the app feel alive. |
-| **Wanted board** | In a tiny market, demand-side posts drive half the trades. Sellers get pinged when they list a match. |
-| **Fall handoff** | Leavers list in May, the item goes into summer storage, the buyer collects at move-in. Directly solves the end-of-year dump. |
+| **Wanted board** | In a tiny market, demand-side posts drive half the trades. |
+| **Fall handoff** | Leavers list in May, the item goes into summer storage, the buyer collects at move-in. |
 | **Move-out mode** (bulk listing) | Ten items in two minutes during the one week everyone is packing. |
 | **Textbooks by course code** | Search `MATH 301` and find exactly the book you need. |
 | **Saved-search alerts** | Catching an item fast matters more than browsing when supply is lumpy. |
-| **Price suggestions** | Based on what the same category actually sold for *on this campus*. |
-| **Impact page** | Items and kilograms kept out of landfill. This is your pitch to the school for official endorsement. |
-| **No payments, no shipping** | Meet at the dining hall, pay with cash or whatever app you both use. Keeps you out of the legal mess of holding minors' money. |
+| **Impact page and dorm cup** | Items and kilograms kept out of landfill, by dorm. |
+| **No payments, no shipping** | Students meet at a public spot on campus and pay each other in person. The site never holds money. |
+
+### Keeping it safe
+
+| Feature | How it works |
+|---|---|
+| **Rules and a not-allowed list** (`/rules`) | Students agree to them at sign-up. Posts that mention a not-allowed word (`BANNED_WORDS`) are held until an organiser approves them. |
+| **Report** | On every listing, wanted post, chat and profile. Reports go to the organisers' queue. The other person isn't told who reported them. |
+| **Block** | A blocked student can't message you, and you stop seeing each other's posts. |
+| **Organisers** (`/admin`) | Emails in `ADMIN_EMAILS`. They work through reports, approve or reject held posts, remove listings, pause accounts, and can read any conversation. Students are told so in every chat, and every organiser action is written to a log. |
+| **Photos** | Re-saved on upload, which strips hidden data such as GPS location and rejects files that aren't images. Deleted from disk when the listing or account goes. |
+| **Help and privacy pages** (`/help`, `/privacy`) | Safety habits, who to talk to (`SAFETY_CONTACT_NAME`), and plain-words privacy. |
+| **Account settings** | Change name, dorm and password, hide from the rankings, or delete the account and everything on it. |
 
 ### The fun layer
 
 | Feature | How it works |
 |---|---|
-| **Giveaway draw** (`/lottery`) | Every 3 confirmed giveaways earns a ticket in the current draw. Organisers set the prizes and the deadline; winners are picked automatically when it passes, weighted by tickets. |
-| **Receipt confirmation** | A giveaway only counts once the receiver taps "Yes, I received it". That stops people listing junk and marking it gone to farm tickets. |
-| **Credits** | Play money inside the app. Won in draws or granted by organisers, spent on any listing whose seller ticks "accept credits". Reserving with credits moves them to the seller instantly; re-listing or deleting refunds them. |
-| **House cup** | Items rehomed per house on the impact page. Boarding schools run on house rivalry. |
-| **Badges** | Giver, Generous, Textbook hero, Summer saver, Lucky, and so on, shown on profiles. |
-| **Organisers page** (`/admin`) | Create draws, draw winners early, grant or deduct credits. Only emails listed in `ADMIN_EMAILS` get in. |
+| **Points and rankings** | 3 points for a confirmed giveaway, 2 for a confirmed sale. Weekly, monthly and school-year tables, in school time. Ties share the prize. Students can hide themselves. |
+| **Receipt confirmation** | A handoff only counts once the receiver taps "Yes, I received it". The receiver must be someone who messaged about the listing, and can say "I didn't get this" instead. |
+| **Fair-play limits** | A handoff counts only if the listing has a photo, the same two students have fewer than 2 counted handoffs that month, and the seller has fewer than 5 that day. A confirmed handoff is locked. |
+| **Credits and boosts** | Credits are earned (1 per counted handoff, ranking prizes, draw prizes, 3 as a welcome gift) and never bought, transferred or cashed out. A student spends 3 to boost one listing to the top of the shelves for 3 days. Boosted listings carry a "Boosted" tag, and sorting by price ignores boosts. |
+| **Giveaway draw** (`/draw`) | Every 3 counted giveaways earns an entry. Free to enter, organisers set prizes and the deadline, winners are picked automatically. |
+| **Badges** | Giver, Generous, Textbook hero, Summer saver and so on, from confirmed handoffs only. |
 
-## Run it
+## Run it on your own computer
 
 ```bash
 npm install
-npm run seed      # optional demo data; demo accounts use password "password123"
-npm run reset     # wipe local data and start over with fresh demo data
+npm run reset     # wipe local data and add fresh demo data (password for demo accounts: password123)
 npm run dev       # http://localhost:3000
 ```
 
-Copy `.env.example` to `.env.local` to set the school name, houses, allowed email domains, meetup spots, and which emails are organisers (`ADMIN_EMAILS`). To try the organisers page with the demo data, run with `ADMIN_EMAILS=maya@demo.school`.
+Copy `.env.example` to `.env.local` to change settings. To try the organiser pages with the demo data, add `ADMIN_EMAILS=maya@demo.school`.
 
-While `SMTP_URL` is not set, the email verification code is printed to the server console **and shown on the verify page**, so you can try the whole flow locally. Before launch, set `SMTP_URL` and implement `sendVerifyEmail` in `src/actions/auth.ts` (nodemailer is the usual choice).
+In development no email is sent. The sign-up code is shown on the verify page and printed in the terminal, and so are password-reset codes (terminal only).
+
+To run the production build locally with demo data, set `DEMO_MODE=1` (a banner on every page says so):
+
+```bash
+npm run build
+DEMO_MODE=1 ADMIN_EMAILS=maya@demo.school npm start
+```
+
+## Before real students use it
+
+A production build (`npm start`) keeps **sign-up closed** until the first two items are set, and never shows codes on screen.
+
+1. `ALLOWED_EMAIL_DOMAINS`: the school's student email domain.
+2. `SMTP_URL` and `MAIL_FROM`: a mail service to send the codes. Any SMTP provider works.
+3. `ADMIN_EMAILS`: the organisers. At least one adult.
+4. `SAFETY_CONTACT_NAME` and `SAFETY_CONTACT_EMAIL`: the adult students are pointed to.
+5. `SCHOOL_NAME` and `SCHOOL_TZ` (for example `America/New_York`).
+6. `HANDOFF_SPOTS`: public places on campus. Never dorm rooms.
+7. `DATA_DIR`: a persistent folder, backed up.
+8. Serve it over HTTPS, and leave `DEMO_MODE` unset.
+9. Have the school read `/rules`, `/help` and `/privacy` and adjust the wording in `src/app/{rules,help,privacy}/page.tsx` to match school policy.
 
 ## Deploy
 
@@ -56,17 +90,23 @@ Serverless hosts (Vercel etc.) won't work as-is because the filesystem isn't per
 ## Code map
 
 ```
-src/lib/config.ts     school settings, categories, impact weights
-src/lib/db.ts         SQLite connection + schema (auto-created on first run)
-src/lib/auth.ts       sessions, password hashing, email-domain check
-src/lib/listings.ts   search/filter queries, price suggestion, impact stats
-src/lib/social.ts     wanted posts, messaging, notifications, alert fan-out
-src/lib/game.ts       credits ledger, lottery tickets and draws, badges, house cup
-src/lib/upload.ts     photo storage
-src/actions/*.ts      server actions (all writes go through here)
-src/app/**            pages
-src/components/**     UI
-scripts/seed.ts       demo data
+src/middleware.ts       the login wall (first check; pages confirm with requireViewer)
+src/lib/config.ts       school settings, limits, credit and fair-play numbers
+src/lib/db.ts           SQLite connection + schema (auto-created and migrated on start)
+src/lib/auth.ts         sessions, password hashing, who may see what
+src/lib/mail.ts         sending codes by email
+src/lib/time.ts         school time zone: weeks, months, deadlines, dates
+src/lib/listings.ts     search/filter queries, boosts in the sort order, impact stats
+src/lib/social.ts       wanted posts, messaging, notifications, alert fan-out
+src/lib/game.ts         credits ledger, draw entries and draws, dorm cup
+src/lib/progress.ts     points, rankings, shared prizes, streaks, badges
+src/lib/moderation.ts   reports, blocks, held posts, paused accounts, organiser log
+src/lib/upload.ts       photo cleaning and storage
+src/lib/housekeeping.ts periodic chores: settle rankings, run due draws, clear old sessions
+src/actions/*.ts        server actions (all writes go through here)
+src/app/**              pages
+src/components/**       UI
+scripts/seed.ts         demo data
 ```
 
 ## Checks
@@ -77,9 +117,10 @@ npm run lint
 npm run build
 ```
 
-## Launch playbook (the part that actually decides whether this wins)
+## Launch playbook
 
-1. Get the school to make it the official platform. Lead with the impact page.
-2. Seed 100+ listings house by house *before* anyone else sees the link.
-3. Launch in the first week of September or the last two weeks of May. Not February.
-4. Put the link in the orientation packet and in every house group chat.
+1. Get the school to make it the official platform. Lead with the safety section above and the impact page.
+2. Agree who the organisers are and who reads reports each day.
+3. Seed 100+ listings dorm by dorm *before* anyone else sees the link.
+4. Launch in the first week of September or the last two weeks of May. Not February.
+5. Put the link in the orientation packet and in every dorm group chat.
