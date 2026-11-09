@@ -2,7 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { createDraw, grantCredits } from "@/actions/game";
-import { resolveReport, suspendUser } from "@/actions/moderation";
+import { resolveReport, sendTestEmail, suspendUser } from "@/actions/moderation";
 import { FormError, FormNote, SubmitButton, useKeptForm } from "./forms";
 
 export function AdminForms({ granted, hasDraw, defaultEnd, zone }: { granted: boolean; hasDraw: boolean; defaultEnd: string; zone: string }) {
@@ -75,6 +75,17 @@ export function SuspendForm() {
       <input aria-label="Reason" name="reason" required maxLength={200} placeholder="Reason (the student sees it)" className="input" />
       <SubmitButton className="btn-orange">Pause account</SubmitButton>
       <div className="sm:col-span-3"><FormError error={state?.error} /><FormNote note={state?.message} /></div>
+    </form>
+  );
+}
+
+/** "Send me a test email", on the organiser page. */
+export function MailTest() {
+  const [state, action] = useActionState(sendTestEmail, undefined);
+  return (
+    <form action={action} className="grid gap-2">
+      <SubmitButton className="btn-ghost justify-self-start">Send me a test email</SubmitButton>
+      <FormError error={state?.error} /><FormNote note={state?.message} />
     </form>
   );
 }

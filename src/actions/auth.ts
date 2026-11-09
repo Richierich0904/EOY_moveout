@@ -6,7 +6,7 @@ import { checkPassword, createSession, destroyAllSessions, destroySession, getCu
 import { emailProblem, gradYearFor, lastNameHint, nameMatchesEmail } from "@/lib/student-email";
 import {
   CODE_ATTEMPTS, CODE_MINUTES, HOUSES, LIMITS, LOGIN_ATTEMPTS, LOGIN_WINDOW_MINUTES,
-  RESEND_SECONDS, SHOW_CODES_ON_SCREEN, SIGNUP_OPEN, WELCOME_CREDITS,
+  RESEND_SECONDS, SHOW_CODES_ON_SCREEN, SIGNUP_EMAILS_PER_HOUR, SIGNUP_OPEN, WELCOME_CREDITS,
 } from "@/lib/config";
 import { sendCode } from "@/lib/mail";
 import { clear, hits, record } from "@/lib/limits";
@@ -39,7 +39,15 @@ export async function signup(_prev: FormState, fd: FormData): Promise<FormState>
   if (fd.get("rules") !== "on") return { error: "Please read and agree to the rules first." };
 
   const db = getDb();
-  if (db.prepare("SELECT 1 FROM users WHERE email = ?").get(email)) return { error: "That email already has an account. Try logging in." };
+  const existing = db.prepare("SELECT id, verified FROM users WHERE email = ?").get(email) as { id: number; verified: number } | undefined;
+  if (existing?.verified) return { error: "That email already has an account. Try logging in." };
+  // Only so many sign-up emails go to one address, so this form can't be used to flood a classmate's inbox.
+  const sent = `signup:${email}`;
+  if (hits(sent, 3600) >= SIGNUP_EMAILS_PER_HOUR) return { error: "A few sign-up emails have already gone to that address. Use the newest code, or try again in an hour." };
+  record(sent);
+  // A sign-up that was started but never finished (maybe by someone else) doesn't hold the address.
+  // Only the person who can read the inbox can finish, so the newest attempt simply replaces it.
+  if (existing) db.prepare("DELETE FROM users WHERE id = ? AND verified = 0").run(existing.id);
 
   const code = makeVerifyCode();
   const r = db.prepare(

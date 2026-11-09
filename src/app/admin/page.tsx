@@ -8,7 +8,10 @@ import { judgeStats } from "@/lib/judge";
 import { SCHOOL_TZ } from "@/lib/config";
 import { fmtDateTime, toSchoolLocal } from "@/lib/time";
 import { timeAgo } from "@/lib/format";
-import { AdminForms } from "@/components/AdminForms";
+import { AdminForms, MailTest } from "@/components/AdminForms";
+import { mailSummary } from "@/lib/mail";
+import { hits } from "@/lib/limits";
+import { IS_PROD, DEMO_MODE } from "@/lib/config";
 import { PageIntro } from "@/components/PageIntro";
 
 export const metadata = { title: "Organisers" };
@@ -23,6 +26,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const reports = openReportCount(), held = heldCount();
   const log = recentLog(20);
   const ai = judgeStats(7);
+  const mail = mailSummary();
+  const mailFailed = hits("mail:fail", 86400);
 
   return (
     <div className="grid max-w-3xl gap-8">
@@ -44,6 +49,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[["Students", stats.users], ["Live listings", stats.live], ["Rehomed", stats.gone], ["Credits issued", stats.issued / 100]].map(([k, v]) => <div key={String(k)} className="card grid gap-0.5 p-4"><div className="display text-[28px] leading-none tabular-nums">{v}</div><div className="text-[13px] text-muted">{k}</div></div>)}
       </div>
+
+      <section className="card grid gap-3 p-5 sm:p-7" data-mail>
+        <h2>Email</h2>
+        {mail.on ? (
+          <>
+            <p className="text-[15px]">Sign-up and password-reset codes are sent through <b className="font-semibold">{mail.server}</b>, from <b className="font-semibold">{mail.from}</b>.</p>
+            {mailFailed > 0 && <p className="border border-fg p-3 text-[13.5px]"><b className="font-semibold">{mailFailed} email{mailFailed === 1 ? "" : "s"} could not be sent in the last day.</b> Students who were affected saw “We couldn&apos;t send the email”. Send yourself a test below to see the reason.</p>}
+            <MailTest />
+            <p className="text-[13px] text-muted">Free email plans have a daily limit. If many students join on the same day, codes can stop arriving until the next day.</p>
+          </>
+        ) : (
+          <p className="text-[15px] text-muted">{IS_PROD && !DEMO_MODE ? "Not set up, so nobody can sign up yet." : "Not set up. Codes are shown on screen instead, which is only safe for testing."} Add <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code> and <code>SMTP_PASS</code> to the server&apos;s settings to send real email.</p>
+        )}
+      </section>
 
       <section className="card grid gap-2 p-5 sm:p-7" data-judge>
         <h2>AI safety judge</h2>

@@ -5,6 +5,7 @@ import { getDb } from "./db";
 import { settleRankings } from "./progress";
 import { runDueDraws } from "./game";
 import { pruneRateEvents } from "./limits";
+import { UNVERIFIED_DAYS } from "./config";
 
 const EVERY_MS = 5 * 60_000;
 
@@ -20,6 +21,8 @@ export function housekeeping(force = false) {
     settleRankings();
     runDueDraws();
     getDb().prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run();
+    // Sign-ups that never entered their code don't linger.
+    getDb().prepare("DELETE FROM users WHERE verified = 0 AND created_at < datetime('now', ?)").run(`-${UNVERIFIED_DAYS} days`);
     pruneRateEvents();
   } catch (e) {
     console.error("[housekeeping]", e);

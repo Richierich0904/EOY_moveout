@@ -55,7 +55,23 @@ Copy `.env.example` to `.env.local` to change settings. To try the organiser pag
 
 The demo accounts use `@demo.school` addresses and can only log in. To try signing up, use a student-shaped address such as `studentt27@mercersburg.edu` with the name "Test Student".
 
-In development no email is sent. The sign-up code is shown on the verify page and printed in the terminal, and so are password-reset codes (terminal only).
+With no mail server set, no email is sent in development. The sign-up code is shown on the verify page and printed in the terminal, and password-reset codes are printed in the terminal.
+
+### Sending real email
+
+Put the mail settings in `.env.local` (see `.env.example`), then check them:
+
+```bash
+npm run mail:test you@example.com
+```
+
+It signs in to the mail server, sends one sample email, and explains any failure in plain words. Once a mail server is set, codes are emailed and no longer shown on screen.
+
+- **Testing:** a personal Gmail account with an app password works. Google limits it to about 500 emails a day, so it is not for launch.
+- **Launch:** use an email service (Resend, Brevo, Postmark, Amazon SES and others all work) with a domain you own. Buy the domain, add the three DNS records the service gives you, and put its settings in `.env.local`. Free plans have a daily limit (often 100 a day), which a launch day at a school can exceed, so plan for a paid month.
+- **School filter:** mail from a new sender can be held as spam. Ask school IT to allow mail from your sending address before launch.
+
+Keep passwords and keys in `.env.local`, never typed into the terminal. That file stays on your computer and is not uploaded to GitHub. The helper commands (`mail:test`, `judge:test`) read it too.
 
 To run the production build locally with demo data, set `DEMO_MODE=1` (a banner on every page says so):
 
@@ -69,7 +85,7 @@ DEMO_MODE=1 ADMIN_EMAILS=maya@demo.school npm start
 The school name, email domain, student address shape and time zone are already set for Mercersburg Academy. A production build (`npm start`) keeps **sign-up closed** until a mail service is set, and never shows codes on screen.
 
 1. `ALLOWED_EMAIL_DOMAINS` and `STUDENT_EMAIL_PATTERN`: already `mercersburg.edu` and the student address shape. Change them only if the school's addresses change.
-2. `SMTP_URL` and `MAIL_FROM`: a mail service to send the codes. Any SMTP provider works.
+2. `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `MAIL_FROM`: a mail service to send the codes, with a domain you own. Check it with `npm run mail:test`, and again with the "Send me a test email" button on the organiser page once the site is live.
 3. `ADMIN_EMAILS`: the organisers. At least one adult.
 4. `SAFETY_CONTACT_NAME` and `SAFETY_CONTACT_EMAIL`: the adult students are pointed to.
 5. `SCHOOL_NAME` and `SCHOOL_TZ`: already Mercersburg Academy and `America/New_York`.
@@ -99,7 +115,7 @@ src/lib/config.ts       school settings, limits, credit and fair-play numbers
 src/lib/db.ts           SQLite connection + schema (auto-created and migrated on start)
 src/lib/auth.ts         sessions, password hashing, who may see what
 src/lib/student-email.ts  who may join: the student address shape, class year, last-name check
-src/lib/mail.ts         sending codes by email
+src/lib/mail.ts         sending codes by email, and explaining mail errors plainly
 src/lib/time.ts         school time zone: weeks, months, deadlines, dates
 src/lib/listings.ts     search/filter queries, boosts in the sort order, impact stats
 src/lib/social.ts       wanted posts, messaging, notifications, alert fan-out
@@ -115,6 +131,8 @@ src/app/**              pages
 src/components/**       UI
 scripts/seed.ts         demo data
 scripts/judge-samples.ts  sample posts for measuring the AI judge
+scripts/mail-test.ts    send one test email to check the mail settings
+scripts/load-env.ts     lets the helper scripts read .env.local
 ```
 
 ## Checks

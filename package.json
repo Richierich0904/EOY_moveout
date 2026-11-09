@@ -10,7 +10,8 @@
     "seed": "tsx scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "reset": "tsx scripts/seed.ts --fresh",
-    "judge:test": "tsx scripts/judge-samples.ts"
+    "judge:test": "tsx scripts/judge-samples.ts",
+    "mail:test": "tsx scripts/mail-test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",

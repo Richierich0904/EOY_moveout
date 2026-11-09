@@ -8,6 +8,8 @@ import { ADMIN_EMAILS, LIMITS, RATE } from "@/lib/config";
 import { fanOutNewListing, getThread, notify } from "@/lib/social";
 import { REPORT_REASONS, TARGET_TYPES, describeTarget, logAdmin, notifyAdmins, type TargetType } from "@/lib/moderation";
 import { deleteImages } from "@/lib/upload";
+import { codeMessage, sendMailDetailed } from "@/lib/mail";
+import { CODE_MINUTES } from "@/lib/config";
 import type { FormState } from "./auth";
 
 function str(fd: FormData, k: string) { return String(fd.get(k) ?? "").trim(); }
@@ -223,4 +225,15 @@ export async function unsuspendUser(fd: FormData) {
     logAdmin(admin, "Account un-paused", u.name);
   }
   revalidatePath("/admin/reports");
+}
+
+/** An organiser sends themselves a sample sign-up email, to check that mail is really being delivered. */
+export async function sendTestEmail(): Promise<FormState> {
+  let admin;
+  try { admin = await requireAdmin(); } catch (e) { return { error: (e as Error).message }; }
+  const { subject, text } = codeMessage("123456", "verify", CODE_MINUTES);
+  const r = await sendMailDetailed(admin.email, `[Test] ${subject}`, `This is a test sent from the organiser page. The code below is a sample and does nothing.\n\n${text}`);
+  logAdmin(admin, r.ok ? "Sent a test email" : "Test email failed", admin.email, r.ok ? "" : r.reason.slice(0, LIMITS.reason));
+  if (!r.ok) return { error: r.reason };
+  return { ok: true, message: `Sent to ${admin.email}. Check the inbox and the spam folder.` };
 }

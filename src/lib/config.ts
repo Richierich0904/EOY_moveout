@@ -12,8 +12,15 @@ export const SCHOOL_TZ = process.env.SCHOOL_TZ ?? "America/New_York";
 export const IS_PROD = process.env.NODE_ENV === "production";
 // DEMO_MODE=1 lets a production build run with demo data and on-screen codes. Never set it on the real site.
 export const DEMO_MODE = process.env.DEMO_MODE === "1";
-export const SMTP_URL = process.env.SMTP_URL ?? "";
-export const MAIL_FROM = process.env.MAIL_FROM ?? "";
+// Outgoing mail. Either the four plain settings (easiest), or one SMTP_URL line.
+// The password itself is only read in src/lib/mail.ts.
+export const SMTP_HOST = (process.env.SMTP_HOST ?? "").trim();
+export const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? "", 10) || 465;
+export const SMTP_USER = (process.env.SMTP_USER ?? "").trim();
+export const SMTP_URL = (process.env.SMTP_URL ?? "").trim();
+export const MAIL_FROM = (process.env.MAIL_FROM ?? "").trim();
+/** Is a mail server set up? Until it is, codes can't be emailed. */
+export const MAIL_ON = SMTP_HOST !== "" || SMTP_URL !== "";
 
 // Comma-separated list of email domains allowed to sign up.
 // Set it to an empty value to allow any email, which only works in development or demo mode.
@@ -29,9 +36,9 @@ export const STUDENT_EMAIL_PATTERN = new RegExp(process.env.STUDENT_EMAIL_PATTER
 export const NAME_CHECK = process.env.NAME_CHECK !== "off";
 
 /** On the real site nobody can sign up until the school's email domain and a mail service are set. */
-export const SIGNUP_OPEN = !IS_PROD || DEMO_MODE || (SMTP_URL !== "" && ALLOWED_EMAIL_DOMAINS.length > 0);
+export const SIGNUP_OPEN = !IS_PROD || DEMO_MODE || (MAIL_ON && ALLOWED_EMAIL_DOMAINS.length > 0);
 /** Codes are only ever shown on screen while developing or demoing, and only when no mail service is set. */
-export const SHOW_CODES_ON_SCREEN = SMTP_URL === "" && (!IS_PROD || DEMO_MODE);
+export const SHOW_CODES_ON_SCREEN = !MAIL_ON && (!IS_PROD || DEMO_MODE);
 
 export const HOUSES = (process.env.HOUSES ?? "Main,Tippetts,Keil,Culberson,Fowle,South,Swank")
   .split(",")
@@ -80,6 +87,8 @@ export const SESSION_DAYS = 30;
 export const CODE_MINUTES = 15;        // how long an emailed code works
 export const CODE_ATTEMPTS = 5;        // wrong tries before the code is locked
 export const RESEND_SECONDS = 60;      // wait between "send a new code"
+export const SIGNUP_EMAILS_PER_HOUR = 3; // sign-up emails to one address, so the form can't flood a classmate
+export const UNVERIFIED_DAYS = 7;      // accounts that never entered their code are cleared after this
 export const LOGIN_ATTEMPTS = 10;      // failed log-ins per email...
 export const LOGIN_WINDOW_MINUTES = 15; // ...in this many minutes
 

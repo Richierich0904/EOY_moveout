@@ -1,11 +1,15 @@
 // Try the AI safety judge on sample posts and see how often it agrees with a person.
 //
-//   ANTHROPIC_API_KEY=... npm run judge:test
+//   npm run judge:test
+//
+// Put your key in .env.local first, on a line like ANTHROPIC_API_KEY=your-key. That file is
+// private to your computer. Don't type the key into the terminal, where it is easy to paste by accident.
 //
 // Each sample says what a careful organiser would want: "allow" (publish straight away) or
 // "review" (hold it for a look). Rerun this after changing the rules prompt in src/lib/judge.ts,
 // and add samples for anything the judge gets wrong at your school.
 // It calls the real AI service, so each run costs a little (a few cents at most).
+import "./load-env";
 import { MODERATION_MODEL, judge, judgeOn, type JudgeInput } from "../src/lib/judge";
 
 type Sample = { expect: "allow" | "review"; kind?: "listing" | "want"; title: string; description?: string; category?: string; price?: number; note?: string };
@@ -51,7 +55,7 @@ const SAMPLES: Sample[] = [
 ];
 
 async function main() {
-  if (!judgeOn()) { console.error("The judge is off. Set ANTHROPIC_API_KEY and run again."); process.exit(1); }
+  if (!judgeOn()) { console.error("The judge is off. Add a line ANTHROPIC_API_KEY=your-key to the file .env.local in this folder, then run this again."); process.exit(1); }
   console.log(`Model: ${MODERATION_MODEL} · ${SAMPLES.length} samples\n`);
   let right = 0, failed = 0, ms = 0, input = 0, cached = 0, output = 0;
   const wrong: string[] = [];
